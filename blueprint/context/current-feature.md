@@ -1,8 +1,9 @@
 # Current Feature
 
-> **Generated file.** Holds the one feature or fix being built right now. Run
-> `/feature <number-or-name>` to spec a build-plan feature, or `/fix "<bug>"` for
-> an ad-hoc fix. Build one thing at a time; `/complete` archives it (to
-> `blueprint/history/features/` or `blueprint/history/fixes/`) and resets this file.
+**Status:** nothing in progress
 
-_Nothing in progress. Run `/feature` or `/fix` to start._
+No feature or fix is currently being built. Run `/feature` to spec the next
+build-plan item (or `/fix` for an ad-hoc change); it will replace this stub with
+the spec for the build loop to follow.
+
+Completed work is archived in `blueprint/history/`.

@@ -45,7 +45,7 @@ cleaned-up checkbox version before generating the project overview.
 
 ## Features
 
-- [ ] 1. **Dashboard page** - UI dashboard showing shift statistics (time, earnings, trips, distance) from mock data for now
+- [x] 1. **Dashboard page** - UI dashboard showing shift statistics (time, earnings, trips, distance) from mock data for now
 - [ ] 2. **Manual shift entry form** - form to enter hours, earnings, trips, distance, and platform in one go (local state, no persistence yet)
 - [ ] 3. **Database integration** - set up Prisma + Neon PostgreSQL and the `Shift` model
 - [ ] 4. **Authentication** - NextAuth v5 Google OAuth + email/password sign-in; protect the app
