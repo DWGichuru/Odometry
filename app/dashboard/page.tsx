@@ -1,28 +1,11 @@
 import StatCard from "@/components/dashboard/StatCard";
 import { computeShiftStats, mockShifts } from "@/lib/mock-data";
-import { Platform, type Shift } from "@/types/shift";
-
-const PLATFORM_LABELS: Record<Platform, string> = {
-  [Platform.UBER]: "Uber",
-  [Platform.LYFT]: "Lyft",
-  [Platform.DOORDASH]: "DoorDash",
-};
-
-// Tailwind needs literal class names, so platform styles are looked up, not built.
-const PLATFORM_BADGE: Record<Platform, string> = {
-  [Platform.UBER]:
-    "bg-[color-mix(in_srgb,var(--uber)_12%,transparent)] text-uber",
-  [Platform.LYFT]:
-    "bg-[color-mix(in_srgb,var(--lyft)_12%,transparent)] text-lyft",
-  [Platform.DOORDASH]:
-    "bg-[color-mix(in_srgb,var(--doordash)_12%,transparent)] text-doordash",
-};
-
-const PLATFORM_FILL: Record<Platform, string> = {
-  [Platform.UBER]: "bg-uber",
-  [Platform.LYFT]: "bg-lyft",
-  [Platform.DOORDASH]: "bg-doordash",
-};
+import {
+  PLATFORM_BADGE,
+  PLATFORM_FILL,
+  PLATFORM_LABELS,
+} from "@/lib/platform";
+import { type Shift } from "@/types/shift";
 
 const DAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"];
 const MS_PER_HOUR = 3_600_000;

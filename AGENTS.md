@@ -16,7 +16,7 @@ scaffolder inside this directory -- it already has scaffold files and will fail.
 - Dev server: `npm run dev` (http://localhost:3000)
 - Build: `npm run build`
 - Lint: `npm run lint`
-- No test runner yet (opt-in: run `$tests` or `/tests` to add one)
+- Test: `npm test` (Vitest; watch mode: `npm run test:watch`)
 
 ## Stack specifics
 
