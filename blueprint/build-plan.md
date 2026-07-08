@@ -48,10 +48,10 @@ cleaned-up checkbox version before generating the project overview.
 - [x] 1. **Dashboard page** - UI dashboard showing shift statistics (time, earnings, trips, distance) from mock data for now
 - [x] 2. **Manual shift entry form** - form to enter hours, earnings, trips, distance, and platform in one go (local state, no persistence yet)
 - [x] 3. **Database integration** - set up Prisma + Neon PostgreSQL and the `Shift` model
-- [ ] 4. **Authentication** - NextAuth v5 Google OAuth + email/password sign-in; protect the app
+- [x] 4. **Authentication** - NextAuth v5 Google OAuth + email/password sign-in; protect the app
   - [x] 4a. NextAuth v5 setup + Google OAuth + protected routes
   - [x] 4b. Email/password registration + sign-in
-  - [ ] 4c. Wire user session to app code
+  - [x] 4c. Wire user session to app code
 - [ ] 5. **Connect pages to database** - persist entered shifts scoped to the signed-in user; dashboard reads real data
 - [ ] 6. **Shift management (CRUD)** - list past shifts with edit and delete for shift and account data
 - [ ] 7. **Screenshot import** - log the car's start odometer, then upload the end-of-shift summary screenshot; DeepSeek V4 Flash extracts stats and end odometer; review/edit, then save (distance = end - start)

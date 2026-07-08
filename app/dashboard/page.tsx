@@ -6,6 +6,8 @@ import {
   PLATFORM_LABELS,
 } from "@/lib/platform";
 import { type Shift } from "@/types/shift";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 
 const DAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"];
 const MS_PER_HOUR = 3_600_000;
@@ -40,7 +42,10 @@ function weekOf(dateStr: string): string[] {
   });
 }
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/sign-in");
+
   const stats = computeShiftStats(mockShifts);
 
   const perHour =

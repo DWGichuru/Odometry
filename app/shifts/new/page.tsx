@@ -1,6 +1,11 @@
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 import ShiftForm from "@/components/shifts/ShiftForm";
 
-export default function NewShiftPage() {
+export default async function NewShiftPage() {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/sign-in");
+
   return (
     <div className="mx-auto w-full max-w-lg flex-1 p-4">
       <div className="pt-2 pb-4">
@@ -10,7 +15,7 @@ export default function NewShiftPage() {
           it&apos;s back-calculated.
         </p>
       </div>
-      <ShiftForm />
+      <ShiftForm userId={session.user.id} />
     </div>
   );
 }

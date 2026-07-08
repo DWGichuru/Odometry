@@ -75,7 +75,7 @@ export function isValid(entry: ShiftEntryErrors): boolean {
   return Object.keys(entry).length === 0;
 }
 
-export function buildShift(data: ShiftFormData): Shift {
+export function buildShift(data: ShiftFormData, userId: string): Shift {
   const date = data.date;
   const endOdometer = Number(data.endOdometer);
   const startOdometer =
@@ -100,7 +100,7 @@ export function buildShift(data: ShiftFormData): Shift {
 
   return {
     id: crypto.randomUUID(),
-    userId: "mock-user-1",
+    userId,
     date,
     platform: data.platform,
     startTime: startDate.toISOString(),

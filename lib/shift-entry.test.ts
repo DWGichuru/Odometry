@@ -200,7 +200,7 @@ describe("isValid", () => {
 
 describe("buildShift", () => {
   it("builds a shift from valid odometer-mode entry", () => {
-    const shift = buildShift(validEntry());
+    const shift = buildShift(validEntry(), "test-user-id");
     expect(shift.date).toBe("2025-07-08");
     expect(shift.platform).toBe(Platform.UBER);
     expect(shift.amountEarned).toBe(150);
@@ -209,13 +209,14 @@ describe("buildShift", () => {
     expect(shift.endOdometer).toBe(45128);
     expect(shift.distanceKm).toBe(128);
     expect(shift.entrySource).toBe("MANUAL");
-    expect(shift.userId).toBe("mock-user-1");
+    expect(shift.userId).toBe("test-user-id");
     expect(shift.id).toBeDefined();
   });
 
   it("back-calculates startOdometer in distance mode", () => {
     const shift = buildShift(
       validEntry({ odoMode: "distance", startOdometer: "", distance: "128" }),
+      "test-user-id",
     );
     expect(shift.startOdometer).toBe(45000);
     expect(shift.endOdometer).toBe(45128);
@@ -230,6 +231,7 @@ describe("buildShift", () => {
         endOdometer: "45128",
         distance: "127.5",
       }),
+      "test-user-id",
     );
     expect(shift.startOdometer).toBe(45000.5);
     expect(shift.distanceKm).toBe(127.5);
@@ -238,6 +240,7 @@ describe("buildShift", () => {
   it("handles overnight shift (end <= start)", () => {
     const shift = buildShift(
       validEntry({ startTime: "18:00", endTime: "01:30" }),
+      "test-user-id",
     );
     const hours = getShiftHours(shift);
     expect(hours).toBeCloseTo(7.5, 1);
@@ -249,6 +252,7 @@ describe("buildShift", () => {
   it("handles same-day shift (end > start)", () => {
     const shift = buildShift(
       validEntry({ startTime: "09:00", endTime: "17:00" }),
+      "test-user-id",
     );
     const hours = getShiftHours(shift);
     expect(hours).toBeCloseTo(8, 1);

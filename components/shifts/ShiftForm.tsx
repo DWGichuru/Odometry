@@ -34,7 +34,7 @@ function formatTime(iso: string): string {
   });
 }
 
-export default function ShiftForm() {
+export default function ShiftForm({ userId }: { userId: string }) {
   const [date, setDate] = useState(todayLocal());
   const [platform, setPlatform] = useState<Platform>(Platform.UBER);
   const [startTime, setStartTime] = useState("");
@@ -73,7 +73,7 @@ export default function ShiftForm() {
       return;
     }
 
-    const shift = buildShift(data);
+    const shift = buildShift(data, userId);
     setShifts((prev) => [shift, ...prev]);
     setErrors({});
 
