@@ -50,7 +50,7 @@ cleaned-up checkbox version before generating the project overview.
 - [x] 3. **Database integration** - set up Prisma + Neon PostgreSQL and the `Shift` model
 - [ ] 4. **Authentication** - NextAuth v5 Google OAuth + email/password sign-in; protect the app
   - [x] 4a. NextAuth v5 setup + Google OAuth + protected routes
-  - [ ] 4b. Email/password registration + sign-in
+  - [x] 4b. Email/password registration + sign-in
   - [ ] 4c. Wire user session to app code
 - [ ] 5. **Connect pages to database** - persist entered shifts scoped to the signed-in user; dashboard reads real data
 - [ ] 6. **Shift management (CRUD)** - list past shifts with edit and delete for shift and account data

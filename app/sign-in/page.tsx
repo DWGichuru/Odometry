@@ -1,4 +1,5 @@
 import { signIn } from "@/auth";
+import SignInForm from "@/components/auth/SignInForm";
 
 export default async function SignInPage({
   searchParams,
@@ -21,7 +22,7 @@ export default async function SignInPage({
         </div>
 
         {params.error && (
-          <div className="mb-5 rounded-md border border-danger-muted bg-danger-muted px-4 py-3 text-[13px] font-medium text-danger">
+          <div className="mb-5 rounded-sm border border-danger-muted bg-danger-muted px-3 py-2.5 text-[13px] font-medium text-danger">
             {params.error === "OAuthSignin"
               ? "Sign-in was cancelled or failed. Please try again."
               : params.error === "OAuthCallback"
@@ -61,6 +62,14 @@ export default async function SignInPage({
             Sign in with Google
           </button>
         </form>
+
+        <div className="my-6 flex items-center gap-3">
+          <hr className="flex-1 border-border" />
+          <span className="text-[12px] font-medium text-muted">or</span>
+          <hr className="flex-1 border-border" />
+        </div>
+
+        <SignInForm callbackUrl={callbackUrl} />
       </div>
     </div>
   );
