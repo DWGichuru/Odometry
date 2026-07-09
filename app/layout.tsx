@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { auth } from "@/auth";
 import UserHeader from "@/components/auth/UserHeader";
+import BottomNav from "@/components/layout/BottomNav";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,11 +20,13 @@ export const metadata: Metadata = {
   description: "Log your rideshare and delivery shifts across platforms.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+
   return (
     <html
       lang="en"
@@ -30,7 +34,10 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <UserHeader />
-        {children}
+        <main className="flex-1 pb-[calc(4rem+env(safe-area-inset-bottom,0px))]">
+          {children}
+        </main>
+        <BottomNav authenticated={Boolean(session?.user?.id)} />
       </body>
     </html>
   );
