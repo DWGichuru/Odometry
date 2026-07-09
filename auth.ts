@@ -49,7 +49,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   events: {
     async createUser({ user }) {
       const trialEnd = new Date();
-      trialEnd.setMonth(trialEnd.getMonth() + 3);
+      trialEnd.setMonth(trialEnd.getMonth() + 1);
 
       await prisma.subscription.create({
         data: {

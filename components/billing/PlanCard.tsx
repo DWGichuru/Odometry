@@ -34,7 +34,7 @@ export function PlanCard() {
       <PlanFeature>Screenshot import with automatic stat extraction</PlanFeature>
       <PlanFeature>Combined earnings, hours &amp; distance dashboard</PlanFeature>
       <div className="flex items-center justify-between pt-3 mt-1.5 border-t border-border-light text-[14px]">
-        <span className="text-text-secondary">Free for your first 3 months</span>
+        <span className="text-text-secondary">Free for your first month</span>
         <span className="text-success font-bold">$0</span>
       </div>
     </div>

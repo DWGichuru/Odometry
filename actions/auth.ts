@@ -39,7 +39,7 @@ export async function register(
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const trialEnd = new Date();
-  trialEnd.setMonth(trialEnd.getMonth() + 3);
+  trialEnd.setMonth(trialEnd.getMonth() + 1);
 
   const user = await prisma.user.create({
     data: {

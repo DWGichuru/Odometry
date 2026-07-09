@@ -12,7 +12,7 @@ async function seed() {
   }
 
   const trialEnd = new Date();
-  trialEnd.setMonth(trialEnd.getMonth() + 3);
+  trialEnd.setMonth(trialEnd.getMonth() + 1);
 
   await prisma.user.create({
     data: {

@@ -29,7 +29,7 @@ export default async function BillingPage() {
         <PlanCard />
 
         <NoticeBanner variant="info" title="Sign in to subscribe" icon={<ArrowIcon />}>
-          Start with 3 months free, then $3.99/mo. Create an account to begin.
+          Start with 1 month free, then $3.99/mo. Create an account to begin.
         </NoticeBanner>
 
         <Link
