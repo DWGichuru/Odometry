@@ -53,7 +53,7 @@ cleaned-up checkbox version before generating the project overview.
   - [x] 4b. Email/password registration + sign-in
   - [x] 4c. Wire user session to app code
 - [x] 5. **Connect pages to database** - persist entered shifts scoped to the signed-in user; dashboard reads real data
-- [ ] 6. **Shift management (CRUD)** - list past shifts with edit and delete for shift and account data
+- [x] 6. **Shift management (CRUD)** - list past shifts with edit and delete for shift and account data
 - [ ] 7. **Screenshot import** - log the car's start odometer, then upload the end-of-shift summary screenshot; DeepSeek V4 Flash extracts stats and end odometer; review/edit, then save (distance = end - start)
 - [ ] 8. **Subscription paywall** - freemium gate: free for the first three months, then $3.99/mo via Stripe
 - [ ] 9. **Landing page** - public marketing/entry page

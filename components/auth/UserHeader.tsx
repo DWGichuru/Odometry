@@ -1,4 +1,5 @@
 import { auth, signOut } from "@/auth";
+import Link from "next/link";
 
 export default async function UserHeader() {
   const session = await auth();
@@ -7,6 +8,18 @@ export default async function UserHeader() {
 
   return (
     <div className="flex items-center gap-3 px-4 py-3">
+      <Link
+        href="/dashboard"
+        className="text-[13px] font-medium text-muted transition-colors hover:text-text-secondary"
+      >
+        Dashboard
+      </Link>
+      <Link
+        href="/shifts"
+        className="text-[13px] font-medium text-muted transition-colors hover:text-text-secondary"
+      >
+        Shifts
+      </Link>
       <span className="min-w-0 flex-1 text-right text-[13px] text-text-secondary">
         <span className="block truncate font-medium text-foreground">
           {session.user.name}

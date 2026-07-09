@@ -1,13 +1,28 @@
 "use client";
 
 import { type FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 import { PLATFORM_LABELS } from "@/lib/platform";
 import { Platform } from "@/types/shift";
 import { isValid, validateShiftEntry } from "@/lib/shift-entry";
 import type { ShiftEntryErrors, ShiftFormData } from "@/lib/shift-entry";
-import { createShift } from "@/actions/shifts";
+import { createShift, updateShift } from "@/actions/shifts";
 
 type OdoMode = "odometer" | "distance";
+
+interface ShiftFormProps {
+  shift?: {
+    id: string;
+    date: string;
+    platform: string;
+    startTime: string;
+    endTime: string;
+    amountEarned: number;
+    tripsCompleted: number;
+    startOdometer: number;
+    endOdometer: number;
+  };
+}
 
 function todayLocal(): string {
   return new Date().toLocaleDateString("en-CA");
@@ -18,17 +33,34 @@ const inputClasses =
   "w-full rounded-sm border border-border bg-background px-3 py-2.5 text-[15px] tabular-nums focus:border-accent focus:ring-2 focus:ring-accent-muted focus:outline-none";
 const errorClasses = "mt-1 text-xs text-danger";
 
-export default function ShiftForm() {
-  const [date, setDate] = useState(todayLocal());
-  const [platform, setPlatform] = useState<Platform>(Platform.UBER);
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
-  const [amountEarned, setAmountEarned] = useState("");
-  const [tripsCompleted, setTripsCompleted] = useState("");
+export default function ShiftForm({ shift }: ShiftFormProps) {
+  const router = useRouter();
+  const editing = Boolean(shift);
+
+  const [date, setDate] = useState(shift?.date ?? todayLocal());
+  const [platform, setPlatform] = useState<Platform>(
+    (shift?.platform as Platform) ?? Platform.UBER,
+  );
+  const [startTime, setStartTime] = useState(
+    shift ? new Date(shift.startTime).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : "",
+  );
+  const [endTime, setEndTime] = useState(
+    shift ? new Date(shift.endTime).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : "",
+  );
+  const [amountEarned, setAmountEarned] = useState(
+    shift ? String(shift.amountEarned) : "",
+  );
+  const [tripsCompleted, setTripsCompleted] = useState(
+    shift ? String(shift.tripsCompleted) : "",
+  );
   const [odoMode, setOdoMode] = useState<OdoMode>("odometer");
-  const [startOdometer, setStartOdometer] = useState("");
+  const [startOdometer, setStartOdometer] = useState(
+    shift ? String(shift.startOdometer) : "",
+  );
   const [distance, setDistance] = useState("");
-  const [endOdometer, setEndOdometer] = useState("");
+  const [endOdometer, setEndOdometer] = useState(
+    shift ? String(shift.endOdometer) : "",
+  );
 
   const [errors, setErrors] = useState<ShiftEntryErrors>({});
   const [serverError, setServerError] = useState<string | null>(null);
@@ -77,11 +109,18 @@ export default function ShiftForm() {
     fd.set("distance", distance);
     fd.set("endOdometer", endOdometer);
 
-    const result = await createShift(undefined, fd);
+    const result = editing
+      ? await updateShift(shift!.id, undefined, fd)
+      : await createShift(undefined, fd);
     setSaving(false);
 
     if (result.error) {
       setServerError(result.error);
+      return;
+    }
+
+    if (editing) {
+      router.push("/shifts");
       return;
     }
 
@@ -323,7 +362,7 @@ export default function ShiftForm() {
           disabled={saving}
           className="mt-1 w-full cursor-pointer rounded-md bg-accent py-3 font-semibold text-accent-ink transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {saving ? "Saving..." : "Add shift"}
+          {saving ? "Saving..." : editing ? "Save changes" : "Add shift"}
         </button>
       </div>
     </form>
