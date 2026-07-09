@@ -22,7 +22,7 @@ covered.
 
 ## Features
 
-In build-plan order. The **headline feature is screenshot import** (#7): extract a
+In build-plan order. The **headline feature is screenshot import** (#8): extract a
 shift's stats from an earnings screenshot instead of typing them.
 
 1. **Dashboard page** - glanceable totals (time, earnings, trips, distance) from mock data first.
@@ -31,10 +31,12 @@ shift's stats from an earnings screenshot instead of typing them.
 4. **Authentication** - NextAuth v5 Google OAuth + email/password; protect the app.
 5. **Connect pages to database** - persist shifts scoped to the signed-in user; dashboard reads real data.
 6. **Shift management (CRUD)** - list past shifts with edit and delete.
-7. **Screenshot import** - log start odometer, upload the end-of-shift summary screenshot, OpenAI GPT-5.4 Nano extracts stats + end odometer, review/edit, then save.
-8. **Subscription paywall** - freemium via Stripe: free for the first three months, then $3.99/mo.
-9. **Landing page** - public marketing/entry page.
-10. **Deploy to Vercel** - production deploy with env config and `prisma migrate deploy`.
+7. **Bottom navigation** - navigation between dashboard, shifts, user profile, and new shift.
+8. **Screenshot import** - log start odometer, upload the end-of-shift summary screenshot, OpenAI GPT4-0 mini extracts stats + end odometer, review/edit, then save.
+9. **Subscription paywall** - freemium via Stripe: free for the first month, then $3.99/mo.
+10. **Trends page** - charts and graphs for earnings/hour, earnings/trip, earnings/km, plus totals over time.
+11. **Landing page** - public marketing/entry page.
+12. **Deploy to Vercel** - production deploy with env config and `prisma migrate deploy`.
 
 ## Data model
 
@@ -69,7 +71,7 @@ and sessions.
 
 - `id` (string, cuid) - primary key
 - `userId` (string, unique) - FK to `User`, cascade on delete
-- `freeTrialEndsAt` (datetime) - signup + 3 months; the app-side gate
+- `freeTrialEndsAt` (datetime) - signup + 1 month; the app-side gate
 - `stripeCustomerId` (string, optional, unique)
 - `stripeSubscriptionId` (string, optional)
 - `status` (enum: `trialing` | `active` | `past_due` | `canceled`)
@@ -100,7 +102,7 @@ and sessions.
 
 > Odometer entry rule: if the driver lacks the start odometer, they enter distance
 > covered and `startOdometer` is back-calculated as `endOdometer - distance`. Lock
-> the `Shift` shape before feature #5 (persistence): features #1, #2, #6, and #7
+> the `Shift` shape before feature #5 (persistence): features #1, #2, #6, and #8
 > all read or write these fields. Screenshots are processed then discarded, so
 > there is no image/file model.
 
@@ -109,7 +111,7 @@ and sessions.
 - **Next.js (React 19) + TypeScript** - App Router, server components and server actions
 - **Neon PostgreSQL + Prisma ORM** - database and schema/migrations
 - **NextAuth v5** - authentication (email/password + Google)
-- **OpenAI GPT-5.4 Nano (vision), via API key** - extract shift stats from screenshots; key stays server-side
+- **OpenAI GPT4-0 mini (vision), via API key** - extract shift stats from screenshots; key stays server-side
 - **Stripe** - subscription billing for the paywall
 - **Tailwind CSS v4 + ShadCN** - styling and UI components
 - **Vercel** - hosting and deployment
@@ -118,12 +120,12 @@ and sessions.
 
 ## Monetization
 
-Freemium subscription billed through Stripe (feature #8):
+Freemium subscription billed through Stripe (feature #9):
 
-| Plan | Price      | Timeline                       |
-| ---- | ---------- | ------------------------------ |
-| Free | $0         | First three months per account |
-| Pro  | $3.99 / mo | After the free period          |
+| Plan | Price      | Timeline                |
+| ---- | ---------- | ----------------------- |
+| Free | $0         | First month per account |
+| Pro  | $3.99 / mo | After the free period   |
 
 ## UI/UX
 
@@ -136,6 +138,7 @@ Anticipated routes (named as features land; not yet built):
 
 - `/` - public landing page
 - `/dashboard` - totals and trends
+- `/trends` - charts and graphs
 - `/shifts` - shift history (list, edit, delete)
 - `/shifts/new` - manual entry form
 - `/import` - screenshot import flow
@@ -144,7 +147,4 @@ Anticipated routes (named as features land; not yet built):
 
 ## Open questions
 
-> None outstanding. Data-model decisions (odometer back-calculation, start/end
-> timestamps, per-account currency, split credential/subscription tables, and dual
-> app+Stripe trial tracking) are all resolved above. Re-run `/overview` if the
-> plans change materially.
+> None outstanding. All plan conflicts resolved.

@@ -29,7 +29,7 @@ High level list of features. One line each, don't go into deep detail
 - Shift storage - persist each driver's shifts, scoped to their account
 - Authentication - quick, secure sign-in (email + Google)
 - Dashboard - totals and trends across shifts (time, earnings, trips, distance)
-
+- Trends - charts and graphs showings trends in total earnings, hours, trips and kms. Also showing trends in earnings/hour, earnings/trip and earnings/km.
 ## 4. Data - What are we storing?
 
 List of data that will be stored eg. users, products, stats
@@ -50,18 +50,18 @@ user row does not expose credentials or grant paid access.
 
 ## 5. Tech - What stack are we using?
 
-| Category    | Choice                                     |
-| ----------- | ------------------------------------------ |
-| Framework   | **Next.js (React 19)**                     |
-| Language    | TypeScript                                 |
-| Database    | Neon PostgreSQL + Prisma ORM               |
-| AI / Vision | DeepSeek V4 Flash (vision) via API key, for screenshot extraction |
-| Caching     | Redis (optional)                           |
-| CSS/UI      | Tailwind CSS v4 + ShadCN                   |
-| Auth        | NextAuth v5 (email + Google)               |
-| Payments    | Stripe (subscriptions)                     |
-| Deployment  | Vercel                                     |
-| Monitoring  | Sentry (later)                             |
+| Category    | Choice                                                             |
+| ----------- | ------------------------------------------------------------------ |
+| Framework   | **Next.js (React 19)**                                             |
+| Language    | TypeScript                                                         |
+| Database    | Neon PostgreSQL + Prisma ORM                                       |
+| AI / Vision | OpenAI GPT4-0 mini (vision) via API key, for screenshot extraction |
+| Caching     | Redis (optional)                                                   |
+| CSS/UI      | Tailwind CSS v4 + ShadCN                                           |
+| Auth        | NextAuth v5 (email + Google)                                       |
+| Payments    | Stripe (subscriptions)                                             |
+| Deployment  | Vercel                                                             |
+| Monitoring  | Sentry (later)                                                     |
 
 > Screenshots are processed for extraction and not stored, so the MVP needs no
 > object storage.
@@ -70,10 +70,10 @@ user row does not expose credentials or grant paid access.
 
 Freemium subscription billed through Stripe: free to start, then a flat monthly fee.
 
-| Plan | Price      | Timeline                  |
-| ---- | ---------- | ------------------------- |
-| Free | $0         | First three months of use |
-| Pro  | $3.99 / mo | After the free period     |
+| Plan | Price      | Timeline              |
+| ---- | ---------- | --------------------- |
+| Free | $0         | First month of use    |
+| Pro  | $3.99 / mo | After the free period |
 
 ## 7. UI/UX - How should this look and feel?
 
