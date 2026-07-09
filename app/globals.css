@@ -125,6 +125,13 @@ body {
   color: var(--text-secondary);
 }
 
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
 .chip {
   display: inline-flex;
   align-items: center;

@@ -148,7 +148,11 @@ export function aggregateTrends(
 }
 
 export function formatTrendTotal(unit: string | undefined, value: number): string {
-  if (unit === "$") return `$${value.toLocaleString()}`;
+  if (unit === "$")
+    return `$${value.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
   const suffix = unit ? ` ${unit}` : "";
   return `${value.toLocaleString()}${suffix}`;
 }
