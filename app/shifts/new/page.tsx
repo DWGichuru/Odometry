@@ -15,7 +15,7 @@ export default async function NewShiftPage() {
           it&apos;s back-calculated.
         </p>
       </div>
-      <ShiftForm userId={session.user.id} />
+      <ShiftForm />
     </div>
   );
 }
