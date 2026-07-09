@@ -65,7 +65,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="block" id="two-ways">
+      <section className="section-block" id="two-ways">
         <div className="wrap-block">
           <div className="section-head center">
             <span className="eyebrow">Log a shift in seconds</span>
@@ -97,7 +97,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="block">
+      <section className="section-block">
         <div className="wrap-block">
           <div className="split">
             <PhoneFrame
@@ -142,7 +142,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="block">
+      <section className="section-block">
         <div className="wrap-block">
           <div className="split rev">
             <div>
@@ -187,7 +187,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="block">
+      <section className="section-block">
         <div className="wrap-block">
           <div className="section-head center">
             <span className="eyebrow">Pricing</span>

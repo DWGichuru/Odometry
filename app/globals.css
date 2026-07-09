@@ -785,7 +785,7 @@ html {
   scroll-padding-top: 80px;
 }
 
-.block {
+.section-block {
   padding: 84px 0;
   border-top: 1px solid var(--border);
 }
