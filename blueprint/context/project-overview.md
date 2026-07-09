@@ -31,7 +31,7 @@ shift's stats from an earnings screenshot instead of typing them.
 4. **Authentication** - NextAuth v5 Google OAuth + email/password; protect the app.
 5. **Connect pages to database** - persist shifts scoped to the signed-in user; dashboard reads real data.
 6. **Shift management (CRUD)** - list past shifts with edit and delete.
-7. **Screenshot import** - log start odometer, upload the end-of-shift summary screenshot, DeepSeek V4 Flash extracts stats + end odometer, review/edit, then save.
+7. **Screenshot import** - log start odometer, upload the end-of-shift summary screenshot, OpenAI GPT-5.4 Nano extracts stats + end odometer, review/edit, then save.
 8. **Subscription paywall** - freemium via Stripe: free for the first three months, then $3.99/mo.
 9. **Landing page** - public marketing/entry page.
 10. **Deploy to Vercel** - production deploy with env config and `prisma migrate deploy`.
@@ -107,7 +107,7 @@ and sessions.
 - **Next.js (React 19) + TypeScript** - App Router, server components and server actions
 - **Neon PostgreSQL + Prisma ORM** - database and schema/migrations
 - **NextAuth v5** - authentication (email/password + Google)
-- **DeepSeek V4 Flash (vision), via API key** - extract shift stats from screenshots; key stays server-side
+- **OpenAI GPT-5.4 Nano (vision), via API key** - extract shift stats from screenshots; key stays server-side
 - **Stripe** - subscription billing for the paywall
 - **Tailwind CSS v4 + ShadCN** - styling and UI components
 - **Vercel** - hosting and deployment

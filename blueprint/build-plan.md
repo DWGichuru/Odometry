@@ -55,7 +55,9 @@ cleaned-up checkbox version before generating the project overview.
 - [x] 5. **Connect pages to database** - persist entered shifts scoped to the signed-in user; dashboard reads real data
 - [x] 6. **Shift management (CRUD)** - list past shifts with edit and delete for shift and account data
 - [x] 7. **Bottom navigation** - navigation between dashboard, shifts, user profile and new shift
-- [ ] 8. **Screenshot import** - log the car's start odometer, then upload the end-of-shift summary screenshot; DeepSeek V4 Flash extracts stats and end odometer; review/edit, then save (distance = end - start)
+- [ ] 8. **Screenshot import** - log the car's start odometer, then upload the end-of-shift summary screenshot; OpenAI GPT-5.4 Nano extracts stats and end odometer; review/edit, then save (distance = end - start)
+  - [x] 8a. OpenAI GPT-5.4 Nano integration - API call, response parser, extractShiftFromScreenshot server action
+  - [ ] 8b. Import flow UI - /import page, file upload, loading state, review/edit form, save flow
 - [ ] 9. **Subscription paywall** - freemium gate: free for the first three months, then $3.99/mo via Stripe
 - [ ] 10. **Landing page** - public marketing/entry page
 - [ ] 11. **Deploy to Vercel** - production deploy with env config and `prisma migrate deploy`

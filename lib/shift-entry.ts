@@ -75,7 +75,11 @@ export function isValid(entry: ShiftEntryErrors): boolean {
   return Object.keys(entry).length === 0;
 }
 
-export function buildShift(data: ShiftFormData, userId: string): Shift {
+export function buildShift(
+  data: ShiftFormData,
+  userId: string,
+  entrySource: EntrySource = EntrySource.MANUAL,
+): Shift {
   const date = data.date;
   const endOdometer = Number(data.endOdometer);
   const startOdometer =
@@ -110,7 +114,7 @@ export function buildShift(data: ShiftFormData, userId: string): Shift {
     startOdometer: Math.round(startOdometer * 100) / 100,
     endOdometer,
     distanceKm,
-    entrySource: EntrySource.MANUAL,
+    entrySource,
     createdAt: now,
     updatedAt: now,
   };
