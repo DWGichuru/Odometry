@@ -7,7 +7,7 @@ const PLOT_L = 34;
 const PLOT_R = 356;
 const PLOT_T = 16;
 const PLOT_B = 170;
-const VIEW_W = 400;
+const VIEW_W = 430;
 const VIEW_H = 200;
 
 function xAt(i: number, count: number): number {
@@ -98,7 +98,7 @@ export default function TrendLineChart({
       x={xAt(i, dataLen)}
       y="188"
       textAnchor="middle"
-      fill="var(--faint)"
+      fill="var(--text-secondary)"
       fontSize="10"
       fontWeight="500"
     >

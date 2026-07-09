@@ -213,7 +213,6 @@ body {
 
 .chart {
   position: relative;
-  overflow: hidden;
 }
 
 .chart svg {
