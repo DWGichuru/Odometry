@@ -74,11 +74,13 @@ and sessions.
 - `stripeSubscriptionId` (string, optional)
 - `status` (enum: `trialing` | `active` | `past_due` | `canceled`)
 - `currentPeriodEnd` (datetime, optional) - from Stripe
+- `isLifetimeFree` (boolean) - grants permanent free access, capped at 5 users
 - `createdAt` / `updatedAt` (datetime)
 
-> Access is granted when `status` is `active`/`trialing` **or** `now < freeTrialEndsAt`.
-> Both the app (`freeTrialEndsAt`) and Stripe (trial subscription) track the free
-> period; the Stripe webhook keeps `status`/`currentPeriodEnd` in sync.
+> Access is granted when `isLifetimeFree` is true, `status` is `active`/`trialing`,
+> **or** `now < freeTrialEndsAt`. Both the app (`freeTrialEndsAt`) and Stripe (trial
+> subscription) track the free period; the Stripe webhook keeps
+> `status`/`currentPeriodEnd` in sync. Lifetime free users skip the paywall entirely.
 
 ### Shift
 

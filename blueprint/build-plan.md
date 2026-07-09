@@ -58,6 +58,6 @@ cleaned-up checkbox version before generating the project overview.
 - [x] 8. **Screenshot import** - log the car's start odometer, then upload the end-of-shift summary screenshot; OpenAI GPT-5.4 Nano extracts stats and end odometer; review/edit, then save (distance = end - start)
   - [x] 8a. OpenAI GPT-5.4 Nano integration - API call, response parser, extractShiftFromScreenshot server action
   - [x] 8b. Import flow UI - /import page, file upload, loading state, review/edit form, save flow
-- [ ] 9. **Subscription paywall** - freemium gate: free for the first three months, then $3.99/mo via Stripe
+- [ ] 9. **Subscription paywall** - freemium gate: free for the first three months, then $3.99/mo via Stripe; 5 lifetime-free users via `isLifetimeFree` flag
 - [ ] 10. **Landing page** - public marketing/entry page
 - [ ] 11. **Deploy to Vercel** - production deploy with env config and `prisma migrate deploy`

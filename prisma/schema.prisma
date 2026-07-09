@@ -60,6 +60,7 @@ model Subscription {
   stripeSubscriptionId String?
   status               SubscriptionStatus @default(trialing)
   currentPeriodEnd     DateTime?
+  isLifetimeFree       Boolean            @default(false)
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
 
