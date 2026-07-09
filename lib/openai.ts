@@ -1,5 +1,5 @@
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
-const MODEL = "gpt-5.4-nano";
+const MODEL = "gpt-4o-mini";
 
 const EXTRACTION_PROMPT = `You are a shift data extractor. Extract the following fields from this rideshare earnings screenshot. Return ONLY a valid JSON object, no other text, no markdown, no explanation:
 

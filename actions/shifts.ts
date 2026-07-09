@@ -4,10 +4,12 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { buildShift, isValid, validateShiftEntry } from "@/lib/shift-entry";
 import type { ShiftFormData } from "@/lib/shift-entry";
+import { EntrySource } from "@/types/shift";
 
 export async function createShift(
   _prevState: { error?: string; success?: boolean } | undefined,
   formData: FormData,
+  entrySource: EntrySource = EntrySource.MANUAL,
 ): Promise<{ error?: string; success?: boolean }> {
   const session = await auth();
   if (!session?.user?.id) {
@@ -33,7 +35,7 @@ export async function createShift(
     return { error: Object.values(errors).join(" ") };
   }
 
-  const shift = buildShift(data, session.user.id);
+  const shift = buildShift(data, session.user.id, entrySource);
 
   await prisma.shift.create({
     data: {
