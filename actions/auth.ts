@@ -3,6 +3,7 @@
 import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getStripe } from "@/lib/stripe";
 import { signIn } from "@/auth";
 
 export async function register(
@@ -40,7 +41,7 @@ export async function register(
   const trialEnd = new Date();
   trialEnd.setMonth(trialEnd.getMonth() + 3);
 
-  await prisma.user.create({
+  const user = await prisma.user.create({
     data: {
       name,
       email,
@@ -55,6 +56,16 @@ export async function register(
       },
     },
   });
+
+  try {
+    const customer = await getStripe().customers.create({ email, name });
+    await prisma.subscription.update({
+      where: { userId: user.id },
+      data: { stripeCustomerId: customer.id },
+    });
+  } catch {
+    // Stripe unavailable -- user can still use the trial
+  }
 
   try {
     await signIn("credentials", { email, password, redirect: false });

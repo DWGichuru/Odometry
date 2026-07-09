@@ -4,6 +4,7 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
+import { getStripe } from "@/lib/stripe";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -44,6 +45,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     signIn: "/sign-in",
   },
   session: { strategy: "jwt" },
+  events: {
+    async createUser({ user }) {
+      const trialEnd = new Date();
+      trialEnd.setMonth(trialEnd.getMonth() + 3);
+
+      await prisma.subscription.create({
+        data: {
+          userId: user.id!,
+          freeTrialEndsAt: trialEnd,
+          status: "trialing",
+        },
+      });
+
+      try {
+        const customer = await getStripe().customers.create({
+          email: user.email!,
+          name: user.name ?? undefined,
+        });
+        await prisma.subscription.update({
+          where: { userId: user.id! },
+          data: { stripeCustomerId: customer.id },
+        });
+      } catch {
+        // Stripe unavailable -- user can still use the trial
+      }
+    },
+  },
   callbacks: {
     session({ session, token }) {
       if (token.sub) {

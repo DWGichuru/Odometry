@@ -59,5 +59,7 @@ cleaned-up checkbox version before generating the project overview.
   - [x] 8a. OpenAI GPT-5.4 Nano integration - API call, response parser, extractShiftFromScreenshot server action
   - [x] 8b. Import flow UI - /import page, file upload, loading state, review/edit form, save flow
 - [ ] 9. **Subscription paywall** - freemium gate: free for the first three months, then $3.99/mo via Stripe; 5 lifetime-free users via `isLifetimeFree` flag
+  - [x] 9a. Stripe integration - install SDK, product/price config, create Stripe customer + Subscription row at signup
+  - [ ] 9b. Paywall gate + billing page - access check middleware, billing UI for users to manage subscription
 - [ ] 10. **Landing page** - public marketing/entry page
 - [ ] 11. **Deploy to Vercel** - production deploy with env config and `prisma migrate deploy`
