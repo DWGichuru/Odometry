@@ -19,5 +19,5 @@
   - [x] 9a. Stripe integration - install SDK, product/price config, create Stripe customer + Subscription row at signup
   - [x] 9b. Paywall gate + billing page - access check middleware, billing UI for users to manage subscription
 - [x] 10. **Trends page** - charts and graphs showings trends in total earnings, hours, trips and kms. Also showing trends in earnings/hour, earnings/trip and earnings/km.
-- [ ] 11. **Landing page** - public marketing/entry page
+- [x] 11. **Landing page** - public marketing/entry page
 - [ ] 12. **Deploy to Vercel** - production deploy with env config and `prisma migrate deploy`
