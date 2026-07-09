@@ -18,6 +18,6 @@
 - [x] 9. **Subscription paywall** - freemium gate: free for the first month, then $3.99/mo via Stripe; 5 lifetime-free users via `isLifetimeFree` flag
   - [x] 9a. Stripe integration - install SDK, product/price config, create Stripe customer + Subscription row at signup
   - [x] 9b. Paywall gate + billing page - access check middleware, billing UI for users to manage subscription
-- [ ] 10. **Trends page** - charts and graphs showings trends in total earnings, hours, trips and kms. Also showing trends in earnings/hour, earnings/trip and earnings/km.
+- [x] 10. **Trends page** - charts and graphs showings trends in total earnings, hours, trips and kms. Also showing trends in earnings/hour, earnings/trip and earnings/km.
 - [ ] 11. **Landing page** - public marketing/entry page
 - [ ] 12. **Deploy to Vercel** - production deploy with env config and `prisma migrate deploy`

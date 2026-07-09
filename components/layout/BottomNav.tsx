@@ -69,6 +69,28 @@ export default function BottomNav({ authenticated }: { authenticated: boolean })
       </Link>
 
       <Link
+        href="/trends"
+        className={`flex flex-1 flex-col items-center justify-center gap-[3px] text-[10px] font-semibold tracking-[0.01em] no-underline ${
+          isActive(pathname, "/trends") ? "text-accent" : "text-muted"
+        }`}
+      >
+        <svg
+          viewBox="0 0 24 24"
+          width={24}
+          height={24}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M3 17l6-6 4 4 7-8" />
+          <path d="M17 7h4v4" />
+        </svg>
+        Trends
+      </Link>
+
+      <Link
         href="/profile"
         className={`flex flex-1 flex-col items-center justify-center gap-[3px] text-[10px] font-semibold tracking-[0.01em] no-underline ${
           isActive(pathname, "/profile") ? "text-accent" : "text-muted"
