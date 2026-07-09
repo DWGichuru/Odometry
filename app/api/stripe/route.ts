@@ -1,17 +1,33 @@
 import { type NextRequest, NextResponse } from "next/server";
+import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 
-const VALID_STATUSES = new Set([
-  "trialing",
-  "active",
-  "past_due",
-  "canceled",
-]);
+type SubStatus = "trialing" | "active" | "past_due" | "canceled";
 
-function mapStripeStatus(stripeStatus: string): string {
-  if (VALID_STATUSES.has(stripeStatus)) return stripeStatus;
+const VALID_STATUSES = new Set<string>(["trialing", "active", "past_due", "canceled"]);
+
+function mapStripeStatus(stripeStatus: string): SubStatus {
+  if (VALID_STATUSES.has(stripeStatus)) return stripeStatus as SubStatus;
   return "past_due";
+}
+
+function subscriptionPeriodEnd(sub: Stripe.Subscription): number | undefined {
+  return sub.items?.data?.[0]?.current_period_end;
+}
+
+function toDate(ts: number | undefined): Date | undefined {
+  return ts ? new Date(ts * 1000) : undefined;
+}
+
+async function syncSubscription(subscription: Stripe.Subscription) {
+  const status = mapStripeStatus(subscription.status);
+  const periodEnd = subscriptionPeriodEnd(subscription);
+
+  await prisma.subscription.updateMany({
+    where: { stripeSubscriptionId: subscription.id },
+    data: { status, currentPeriodEnd: toDate(periodEnd) },
+  });
 }
 
 export async function POST(request: NextRequest) {
@@ -19,7 +35,7 @@ export async function POST(request: NextRequest) {
   const signature = request.headers.get("stripe-signature") ?? "";
 
   const stripe = getStripe();
-  let event;
+  let event: Stripe.Event;
   try {
     event = stripe.webhooks.constructEvent(
       body,
@@ -38,11 +54,17 @@ export async function POST(request: NextRequest) {
         const subscriptionId = session.subscription as string;
 
         if (customerId && subscriptionId) {
+          const subscription = await stripe.subscriptions.retrieve(
+            subscriptionId,
+          );
           await prisma.subscription.updateMany({
             where: { stripeCustomerId: customerId },
             data: {
               stripeSubscriptionId: subscriptionId,
-              status: "active",
+              status: mapStripeStatus(subscription.status),
+              currentPeriodEnd: toDate(
+                subscriptionPeriodEnd(subscription),
+              ),
             },
           });
         }
@@ -51,17 +73,7 @@ export async function POST(request: NextRequest) {
 
       case "customer.subscription.updated": {
         const sub = event.data.object;
-        const periodEnd = sub.items.data[0]?.current_period_end;
-        const status = mapStripeStatus(sub.status);
-        await prisma.subscription.updateMany({
-          where: { stripeSubscriptionId: sub.id },
-          data: {
-            status: status as "trialing" | "active" | "past_due" | "canceled",
-            currentPeriodEnd: periodEnd
-              ? new Date(periodEnd * 1000)
-              : undefined,
-          },
-        });
+        await syncSubscription(sub);
         break;
       }
 
@@ -71,6 +83,32 @@ export async function POST(request: NextRequest) {
           where: { stripeSubscriptionId: sub.id },
           data: { status: "canceled" },
         });
+        break;
+      }
+
+      case "invoice.paid":
+      case "invoice.payment_failed": {
+        const invoice = event.data.object;
+        const status: SubStatus =
+          event.type === "invoice.paid" ? "active" : "past_due";
+        const parent = invoice.parent as
+          | { type: string; subscription?: string | { id: string } }
+          | null;
+
+        if (parent?.subscription) {
+          const subscriptionId =
+            typeof parent.subscription === "string"
+              ? parent.subscription
+              : parent.subscription.id;
+          await prisma.subscription.updateMany({
+            where: { stripeSubscriptionId: subscriptionId },
+            data: { status },
+          });
+        }
+        break;
+      }
+
+      case "customer.subscription.trial_will_end": {
         break;
       }
     }

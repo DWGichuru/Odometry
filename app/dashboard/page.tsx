@@ -7,7 +7,12 @@ import {
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { NoticeBanner } from "@/components/billing/NoticeBanner";
 import Link from "next/link";
+
+function daysBetween(a: Date, b: Date): number {
+  return Math.ceil((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
+}
 
 const DAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"];
 const MS_PER_HOUR = 3_600_000;
@@ -57,6 +62,20 @@ export default async function DashboardPage({
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/sign-in");
+
+  const sub = await prisma.subscription.findUnique({
+    where: { userId: session.user.id },
+    select: { status: true, freeTrialEndsAt: true, isLifetimeFree: true },
+  });
+
+  const trialEnd = sub?.freeTrialEndsAt
+    ? new Date(sub.freeTrialEndsAt)
+    : null;
+  const trialDaysRemaining = trialEnd
+    ? Math.max(0, daysBetween(new Date(), trialEnd))
+    : 0;
+  const showTrialBanner =
+    sub?.status === "trialing" && !sub.isLifetimeFree && trialDaysRemaining <= 7;
 
   const params = await searchParams;
 
@@ -161,6 +180,12 @@ export default async function DashboardPage({
           </Link>
         </div>
       </div>
+
+      {showTrialBanner && (
+        <NoticeBanner variant="warn" title={`Trial ends in ${trialDaysRemaining} day${trialDaysRemaining !== 1 ? "s" : ""}`}>
+          <Link href="/billing" className="underline hover:no-underline">Subscribe now</Link> to keep logging shifts without interruption.
+        </NoticeBanner>
+      )}
 
       {shifts.length === 0 ? (
         <div className="rounded-lg border border-border bg-surface p-10 text-center shadow-md">

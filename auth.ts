@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
+import { hasAccess } from "@/lib/subscription";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -73,10 +74,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   callbacks: {
+    async jwt({ token, user }) {
+      if (user?.id) {
+        const sub = await prisma.subscription.findUnique({
+          where: { userId: user.id },
+          select: { status: true, freeTrialEndsAt: true, isLifetimeFree: true },
+        });
+        token.subscriptionAccess = hasAccess(sub);
+      }
+      return token;
+    },
     session({ session, token }) {
       if (token.sub) {
         session.user.id = token.sub;
       }
+      session.user.subscriptionAccess = Boolean(token.subscriptionAccess);
       return session;
     },
   },

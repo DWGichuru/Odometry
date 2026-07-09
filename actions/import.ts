@@ -1,6 +1,8 @@
 "use server";
 
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
+import { hasAccess } from "@/lib/subscription";
 import { callOpenAIVision } from "@/lib/openai";
 import { parseExtractionResponse } from "@/lib/extract-parser";
 import type { ExtractedShiftFields } from "@/lib/extract-parser";
@@ -16,6 +18,15 @@ export async function extractShiftFromScreenshot(
   const session = await auth();
   if (!session?.user?.id) {
     return { error: "You must be signed in." };
+  }
+
+  const sub = await prisma.subscription.findUnique({
+    where: { userId: session.user.id },
+    select: { status: true, freeTrialEndsAt: true, isLifetimeFree: true },
+  });
+
+  if (!hasAccess(sub)) {
+    return { error: "Your free trial has ended. Subscribe to continue." };
   }
 
   const file = formData.get("file");

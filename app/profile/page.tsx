@@ -1,6 +1,8 @@
 import { auth, signOut } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { StatusBadge } from "@/components/billing/StatusBadge";
+import Link from "next/link";
 
 const CURRENCY_NAMES: Record<string, string> = {
   USD: "US Dollar",
@@ -24,13 +26,36 @@ function formatMemberSince(date: Date): string {
   });
 }
 
+function daysBetween(a: Date, b: Date): number {
+  return Math.ceil((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+const BADGE_LABELS: Record<string, string> = {
+  trialing: "Free trial",
+  active: "Active",
+  past_due: "Past due",
+  canceled: "Canceled",
+};
+
 export default async function ProfilePage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/sign-in");
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { name: true, email: true, currency: true, createdAt: true },
+    select: {
+      name: true,
+      email: true,
+      currency: true,
+      createdAt: true,
+      subscription: {
+        select: {
+          status: true,
+          freeTrialEndsAt: true,
+          isLifetimeFree: true,
+        },
+      },
+    },
   });
 
   if (!user) redirect("/sign-in");
@@ -39,6 +64,14 @@ export default async function ProfilePage() {
   const displayEmail = user.email ?? "";
   const currencyCode = user.currency ?? "USD";
   const currencyName = CURRENCY_NAMES[currencyCode] ?? currencyCode;
+
+  const sub = user.subscription;
+  const trialEnd = sub?.freeTrialEndsAt
+    ? new Date(sub.freeTrialEndsAt)
+    : null;
+  const trialDaysRemaining = trialEnd
+    ? Math.max(0, daysBetween(new Date(), trialEnd))
+    : 0;
 
   return (
     <div className="mx-auto w-full max-w-lg flex-1 p-4">
@@ -73,6 +106,32 @@ export default async function ProfilePage() {
           </span>
         </div>
         <div className="flex items-center justify-between border-b border-border-light px-4 py-3.5">
+          <span className="text-[14px] text-muted">Plan</span>
+          <span className="text-[14px] font-semibold text-text-secondary">
+            {sub ? (
+              <>
+                <StatusBadge
+                  variant={
+                    sub.status as "trialing" | "active" | "past_due" | "canceled"
+                  }
+                  label={
+                    sub.isLifetimeFree
+                      ? "Lifetime Free"
+                      : BADGE_LABELS[sub.status] ?? sub.status
+                  }
+                />{" "}
+                {trialDaysRemaining > 0 && sub.status === "trialing" && (
+                  <span className="text-[12px] font-medium text-muted">
+                    {trialDaysRemaining}d left
+                  </span>
+                )}
+              </>
+            ) : (
+              "—"
+            )}
+          </span>
+        </div>
+        <div className="flex items-center justify-between border-b border-border-light px-4 py-3.5">
           <span className="text-[14px] text-muted">Currency</span>
           <span className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-text-secondary">
             <span className="rounded-md bg-surface-raised px-2 py-0.5 text-[12px] font-bold tracking-[0.02em]">
@@ -89,6 +148,13 @@ export default async function ProfilePage() {
         </div>
       </div>
 
+      <Link
+        href="/billing"
+        className="mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-surface px-4 py-3.5 text-[15px] font-semibold text-text-secondary transition-colors hover:bg-surface-raised"
+      >
+        Manage billing
+      </Link>
+
       <form
         action={async () => {
           "use server";
@@ -97,7 +163,7 @@ export default async function ProfilePage() {
       >
         <button
           type="submit"
-          className="mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-surface px-4 py-3.5 text-[15px] font-semibold text-danger transition-colors hover:bg-danger-muted"
+          className="mt-2.5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-surface px-4 py-3.5 text-[15px] font-semibold text-danger transition-colors hover:bg-danger-muted"
         >
           <svg
             viewBox="0 0 24 24"

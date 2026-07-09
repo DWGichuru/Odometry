@@ -2,19 +2,37 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { hasAccess } from "@/lib/subscription";
 import { buildShift, isValid, validateShiftEntry } from "@/lib/shift-entry";
 import type { ShiftFormData } from "@/lib/shift-entry";
 import { EntrySource } from "@/types/shift";
+
+async function checkAccess(): Promise<{ error: string } | { userId: string }> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "You must be signed in." };
+  }
+
+  const sub = await prisma.subscription.findUnique({
+    where: { userId: session.user.id },
+    select: { status: true, freeTrialEndsAt: true, isLifetimeFree: true },
+  });
+
+  if (!hasAccess(sub)) {
+    return { error: "Your free trial has ended. Subscribe to continue." };
+  }
+
+  return { userId: session.user.id };
+}
 
 export async function createShift(
   _prevState: { error?: string; success?: boolean } | undefined,
   formData: FormData,
   entrySource: EntrySource = EntrySource.MANUAL,
 ): Promise<{ error?: string; success?: boolean }> {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return { error: "You must be signed in." };
-  }
+  const access = await checkAccess();
+  if ("error" in access) return access;
+  const { userId } = access;
 
   const data: ShiftFormData = {
     date: (formData.get("date") as string) ?? "",
@@ -35,7 +53,7 @@ export async function createShift(
     return { error: Object.values(errors).join(" ") };
   }
 
-  const shift = buildShift(data, session.user.id, entrySource);
+  const shift = buildShift(data, userId, entrySource);
 
   await prisma.shift.create({
     data: {
@@ -62,16 +80,15 @@ export async function updateShift(
   _prevState: { error?: string; success?: boolean } | undefined,
   formData: FormData,
 ): Promise<{ error?: string; success?: boolean }> {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return { error: "You must be signed in." };
-  }
+  const access = await checkAccess();
+  if ("error" in access) return access;
+  const { userId } = access;
 
   const existing = await prisma.shift.findUnique({
     where: { id: shiftId },
   });
 
-  if (!existing || existing.userId !== session.user.id) {
+  if (!existing || existing.userId !== userId) {
     return { error: "Shift not found." };
   }
 
@@ -94,7 +111,7 @@ export async function updateShift(
     return { error: Object.values(errors).join(" ") };
   }
 
-  const shift = buildShift(data, session.user.id);
+  const shift = buildShift(data, userId);
 
   await prisma.shift.update({
     where: { id: shiftId },
@@ -117,16 +134,15 @@ export async function updateShift(
 export async function deleteShift(
   shiftId: string,
 ): Promise<{ error?: string; success?: boolean }> {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return { error: "You must be signed in." };
-  }
+  const access = await checkAccess();
+  if ("error" in access) return access;
+  const { userId } = access;
 
   const existing = await prisma.shift.findUnique({
     where: { id: shiftId },
   });
 
-  if (!existing || existing.userId !== session.user.id) {
+  if (!existing || existing.userId !== userId) {
     return { error: "Shift not found." };
   }
 
