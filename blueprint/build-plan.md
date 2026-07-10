@@ -22,7 +22,7 @@
 - [x] 11. **Landing page** - public marketing/entry page
 - [ ] 12. **Odometer photo shift tracking** - start a shift by photographing the odometer and end it the same way; the vision model reads each reading and the app timestamps it when the photo is processed, so start time, end time, and distance are captured without typing
   - [x] 12a. `ShiftSession` model + migration + start/end server actions (typed odometer values, no camera yet) so one open shift per user survives an app close
-  - [ ] 12b. Odometer vision prompt + response parser + plausibility checks (unit, trip-meter confusion, reading continuity against the driver's last shift)
+  - [x] 12b. Odometer vision prompt + response parser + plausibility checks (unit, trip-meter confusion, reading continuity against the driver's last shift)
   - [ ] 12c. Camera capture and review/confirm UI for both ends of the shift, plus the in-progress banner on the dashboard
   - [ ] 12d. Chain the earnings screenshot into the end-of-shift flow so every `Shift` field is filled with no typing
 - [ ] 13. **Deploy to Vercel** - production deploy with env config and `prisma migrate deploy`

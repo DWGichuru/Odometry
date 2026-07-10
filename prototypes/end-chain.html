@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GigWise - end-of-shift chain</title>
+  <link rel="stylesheet" href="theme.css" />
+  <style>
+    .steps {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 0 14px;
+    }
+
+    .steps .s {
+      flex: 1;
+      height: 3px;
+      border-radius: 999px;
+      background: var(--border);
+    }
+
+    .steps .s.done {
+      background: var(--live);
+    }
+
+    .steps .s.at {
+      background: var(--accent);
+    }
+
+    .step-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .step-label b {
+      color: var(--accent);
+    }
+
+    .panel {
+      padding: 18px 16px;
+    }
+
+    .done-cap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px;
+      margin-bottom: 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid color-mix(in srgb, var(--live) 35%, var(--border));
+      background: var(--live-muted);
+    }
+
+    .done-cap .tick {
+      flex: none;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: var(--live);
+      color: #05271c;
+      font-weight: 800;
+    }
+
+    .done-cap .t {
+      font-size: 13.5px;
+      font-weight: 600;
+    }
+
+    .done-cap .d {
+      margin-top: 2px;
+      font-size: 11.5px;
+      color: var(--muted);
+    }
+
+    /* mirrors the input step of app/import/page.tsx */
+    .import-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      background: var(--surface);
+      box-shadow: var(--card-shadow);
+    }
+
+    .import-card .inner {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 20px;
+    }
+
+    .field-label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    .picker {
+      display: flex;
+      width: 100%;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 34px 20px;
+      border: 2px dashed var(--border-light);
+      border-radius: var(--radius-lg);
+      background: var(--background);
+      color: inherit;
+      font: inherit;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .picker svg {
+      color: var(--accent);
+    }
+
+    .picker:hover {
+      border-color: var(--accent);
+      background: var(--accent-muted);
+    }
+
+    .picker .big {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--foreground);
+    }
+
+    .picker .small {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .picker.chosen {
+      border-style: solid;
+      border-color: var(--accent);
+      background: var(--accent-muted);
+    }
+
+    .picker .file {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .btn-import {
+      margin-top: 4px;
+      width: 100%;
+      padding: 12px;
+      border: 0;
+      border-radius: var(--radius-md);
+      background: var(--accent);
+      color: var(--accent-ink);
+      font: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .btn-import:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    /* mirrors the loading step of app/import/page.tsx */
+    .loading-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      padding: 56px 20px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      background: var(--surface);
+      box-shadow: var(--card-shadow);
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 999px;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .loading-card .t {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .loading-card .d {
+      margin-top: 4px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .skip {
+      margin-top: 12px;
+      text-align: center;
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+
+    .skip a {
+      color: var(--accent);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .skip a:hover {
+      text-decoration: underline;
+    }
+
+    /* summary */
+    .summary-head {
+      padding: 18px 16px 4px;
+    }
+
+    .summary-head h2 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .summary-head p {
+      margin-top: 4px;
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+
+    .hero-amount {
+      margin: 10px 16px;
+      padding: 14px 16px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      background: radial-gradient(120% 140% at 0% 0%,
+          color-mix(in srgb, var(--accent) 16%, transparent) 0%,
+          transparent 55%),
+        var(--surface);
+    }
+
+    .hero-amount .v {
+      margin-top: 6px;
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .rows {
+      margin: 0 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      background: var(--surface);
+      overflow: hidden;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .row:last-child {
+      border-bottom: 0;
+    }
+
+    .row .k {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .row .v {
+      margin-left: auto;
+      font-size: 13.5px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .src {
+      flex: none;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: var(--surface-raised);
+      font-size: 12px;
+    }
+
+    .row.derived {
+      background: var(--accent-muted);
+    }
+
+    .row.derived .k,
+    .row.derived .v {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .row.derived .src {
+      background: color-mix(in srgb, var(--accent) 22%, transparent);
+    }
+
+    .src-key {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      margin: 14px 16px 0;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .edit {
+      margin-left: 8px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .foot {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 14px 16px 20px;
+      background: linear-gradient(transparent, var(--background) 32%);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .scroll.chain {
+      padding-bottom: 120px;
+    }
+
+    .head-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 16px 0;
+    }
+
+    .head-bar .back {
+      color: var(--muted);
+      font-size: 19px;
+      text-decoration: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage">
+    <div class="stage-head">
+      <h1>End-of-shift chain (12d)</h1>
+      <p>
+        The end odometer is already confirmed, so the flow keeps going rather
+        than dumping the driver on a form. Every field on the summary is
+        tagged with where it came from; nothing on this path is typed.
+      </p>
+    </div>
+
+    <div class="stage-bar">
+      <div class="seg" id="seg-step">
+        <button aria-pressed="true" onclick="setStep('screenshot')">1 · Hand off to screenshot</button>
+        <button aria-pressed="false" onclick="setStep('loading')">2 · Extracting</button>
+        <button aria-pressed="false" onclick="setStep('summary')">3 · Summary, ready to save</button>
+      </div>
+      <div class="seg" id="seg-theme">
+        <button aria-pressed="true" onclick="setTheme('dark')">Dark</button>
+        <button aria-pressed="false" onclick="setTheme('light')">Light</button>
+      </div>
+    </div>
+
+    <nav class="nav-links">
+      <a href="entry-sheet.html">Entry sheet</a>
+      <a href="capture.html">Camera capture</a>
+      <a href="dashboard-live.html">Dashboard (live)</a>
+      <a href="end-chain.html" aria-current="page">End-of-shift chain</a>
+    </nav>
+
+    <div class="device">
+      <div class="notch"></div>
+      <div class="screen">
+        <div class="statusbar"><span>4:07</span><span>▮▮▮ ▾ 61%</span></div>
+
+        <div class="body">
+          <!-- step 1: hand off to the earnings screenshot -->
+          <div class="scroll chain" id="step-screenshot">
+            <div class="head-bar">
+              <a href="#" class="back">←</a>
+              <div class="page-title" style="font-size: 21px">Finish shift</div>
+            </div>
+
+            <div class="panel">
+              <div class="steps">
+                <div class="s done"></div>
+                <div class="s done"></div>
+                <div class="s at"></div>
+                <div class="s"></div>
+              </div>
+              <div class="step-label">
+                <span>Odometer read</span>
+                <b>Earnings</b>
+                <span>Save</span>
+              </div>
+
+              <div class="done-cap">
+                <div class="tick">✓</div>
+                <div>
+                  <div class="t">Shift closed · 6h 26m · 288.0 km</div>
+                  <div class="d">Time: 9:41 AM → 4:07 PM</div>
+                  <div class="d">Odometer: 048231 km → 048519 km</div>
+                </div>
+              </div>
+
+              <div class="import-card" id="import-card">
+                <div class="inner">
+                  <div>
+                    <label class="field-label">Earnings screenshot</label>
+                    <button class="picker" id="picker" onclick="chooseFile()">
+                      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <path d="m17 8-5-5-5 5" />
+                        <path d="M12 3v12" />
+                      </svg>
+                      <span id="picker-copy">
+                        <span class="big" style="display: block">Tap to select a screenshot</span>
+                        <span class="small" style="display: block; margin-top: 10px">
+                          Upload your end-of-shift earnings summary
+                        </span>
+                      </span>
+                    </button>
+                  </div>
+
+                  <button class="btn-import" id="btn-import" disabled onclick="setStep('loading')">
+                    Import shift data
+                  </button>
+                </div>
+              </div>
+
+              <div class="skip" id="skip">
+                Don't have one?
+                <a href="#" onclick="setStep('summary'); return false">Enter earnings by hand</a>
+              </div>
+
+              <div class="loading-card hidden" id="loading-card">
+                <div class="spinner"></div>
+                <div style="text-align: center">
+                  <div class="t">Extracting shift data...</div>
+                  <div class="d">Reading earnings, trips and times from your screenshot.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- step 2: everything filled -->
+          <div class="scroll chain hidden" id="step-summary">
+            <div class="head-bar">
+              <a href="#" class="back" onclick="setStep('screenshot'); return false">←</a>
+              <div class="page-title" style="font-size: 21px">Review shift</div>
+            </div>
+
+            <div class="panel" style="padding-bottom: 0">
+              <div class="steps">
+                <div class="s done"></div>
+                <div class="s done"></div>
+                <div class="s done"></div>
+                <div class="s at"></div>
+              </div>
+              <div class="step-label">
+                <span>Odometer read</span>
+                <span>Earnings</span>
+                <b>Save</b>
+              </div>
+            </div>
+
+            <div class="hero-amount">
+              <div class="eyebrow-sm">Earned this shift</div>
+              <div class="v">$198.40</div>
+              <div class="pill" style="margin-top: 8px; background: var(--live-muted); color: var(--live)">
+                <span>✓</span> Nothing left to type
+              </div>
+            </div>
+
+            <div class="rows">
+              <div class="row">
+                <span class="src">🖼</span>
+                <span class="k">Date</span>
+                <span class="v">Sat, Jul 11</span>
+              </div>
+              <div class="row">
+                <span class="src">🖼</span>
+                <span class="k">Platform</span>
+                <span class="v" style="color: var(--uber)">Uber</span>
+              </div>
+              <div class="row">
+                <span class="src">⏱</span>
+                <span class="k">Start time</span>
+                <span class="v">9:41 AM</span>
+              </div>
+              <div class="row">
+                <span class="src">⏱</span>
+                <span class="k">End time</span>
+                <span class="v">4:07 PM</span>
+              </div>
+              <div class="row">
+                <span class="src">🖼</span>
+                <span class="k">Amount earned</span>
+                <span class="v">$198.40</span>
+              </div>
+              <div class="row">
+                <span class="src">🖼</span>
+                <span class="k">Trips completed</span>
+                <span class="v">21</span>
+              </div>
+              <div class="row">
+                <span class="src">📷</span>
+                <span class="k">Start odometer</span>
+                <span class="v">048231 km</span>
+              </div>
+              <div class="row">
+                <span class="src">📷</span>
+                <span class="k">End odometer</span>
+                <span class="v">048519 km</span>
+              </div>
+              <div class="row derived">
+                <span class="src">∑</span>
+                <span class="k">Distance covered</span>
+                <span class="v">288.0 km</span>
+              </div>
+            </div>
+
+            <div class="src-key">
+              <span>📷 Odometer photo</span>
+              <span>🖼 Screenshot</span>
+              <span>⏱ Timestamped</span>
+            </div>
+
+            <div style="margin: 12px 16px 0; text-align: center">
+              <a href="#" class="edit" style="margin: 0">Something wrong? Edit fields</a>
+            </div>
+          </div>
+
+          <div class="foot hidden" id="foot">
+            <button class="btn btn-accent">Save shift</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function setTheme(t) {
+      document.documentElement.dataset.theme = t;
+      document
+        .getElementById("seg-theme")
+        .querySelectorAll("button")
+        .forEach((b, i) => b.setAttribute("aria-pressed", i === (t === "dark" ? 0 : 1)));
+    }
+
+    function chooseFile() {
+      document.getElementById("picker").classList.add("chosen");
+      document.getElementById("picker-copy").innerHTML =
+        '<span class="file" style="display: block">uber-earnings-jul11.png</span>' +
+        '<span class="small" style="display: block; margin-top: 10px">Tap to choose a different screenshot</span>';
+      document.getElementById("btn-import").disabled = false;
+    }
+
+    function setStep(s) {
+      const summary = s === "summary";
+      const loading = s === "loading";
+
+      document.getElementById("step-screenshot").classList.toggle("hidden", summary);
+      document.getElementById("step-summary").classList.toggle("hidden", !summary);
+      document.getElementById("foot").classList.toggle("hidden", !summary);
+
+      document.getElementById("import-card").classList.toggle("hidden", loading);
+      document.getElementById("skip").classList.toggle("hidden", loading);
+      document.getElementById("loading-card").classList.toggle("hidden", !loading);
+
+      const order = ["screenshot", "loading", "summary"];
+      document
+        .getElementById("seg-step")
+        .querySelectorAll("button")
+        .forEach((b, i) => b.setAttribute("aria-pressed", i === order.indexOf(s)));
+
+      if (loading) {
+        setTimeout(() => {
+          const still = document.querySelectorAll("#seg-step button")[1];
+          if (still.getAttribute("aria-pressed") === "true") setStep("summary");
+        }, 1700);
+      }
+    }
+  </script>
+</body>
+
+</html>
