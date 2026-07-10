@@ -34,3 +34,35 @@ export async function getOpenSession(): Promise<
     },
   };
 }
+
+export async function getCompletedSession(): Promise<
+  { session: ShiftSession | null } | { error: string }
+> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "You must be signed in." };
+  }
+
+  const completed = await prisma.shiftSession.findFirst({
+    where: { userId: session.user.id, status: "COMPLETED" },
+    orderBy: { endedAt: "desc" },
+  });
+
+  if (!completed) {
+    return { session: null };
+  }
+
+  return {
+    session: {
+      id: completed.id,
+      userId: completed.userId,
+      startOdometer: completed.startOdometer,
+      startedAt: completed.startedAt.toISOString(),
+      endOdometer: completed.endOdometer,
+      endedAt: completed.endedAt?.toISOString() ?? null,
+      status: completed.status as unknown as ShiftSession["status"],
+      createdAt: completed.createdAt.toISOString(),
+      updatedAt: completed.updatedAt.toISOString(),
+    },
+  };
+}

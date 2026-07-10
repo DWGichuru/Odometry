@@ -198,7 +198,7 @@ export default function CapturePage({ searchParams }: CapturePageProps) {
         return;
       }
 
-      router.push("/dashboard");
+      router.push(captureType === "end" ? "/review-shift" : "/dashboard");
     } catch {
       setErrorMessage("Something went wrong. Please try again.");
       setConfirming(false);
