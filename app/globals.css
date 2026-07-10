@@ -84,7 +84,6 @@
       ),
       radial-gradient(900px 520px at 6% 6%, rgba(255, 0, 191, 0.1), transparent 55%);
     --accent-gradient: linear-gradient(135deg, #3b82f6, #6366f1);
-    --accent-gradient-strong: linear-gradient(135deg, #2563eb, #4f46e5);
   }
 }
 
@@ -113,7 +112,6 @@
     ),
     radial-gradient(900px 520px at 6% 6%, rgba(255, 0, 191, 0.1), transparent 55%);
   --accent-gradient: linear-gradient(135deg, #3b82f6, #6366f1);
-  --accent-gradient-strong: linear-gradient(135deg, #2563eb, #4f46e5);
 }
 
 @theme inline {
