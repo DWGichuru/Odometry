@@ -28,4 +28,4 @@
     - [x] 12c-2. Camera capture page -- /capture route, full-bleed camera, processing, review panels, calls extractOdometerFromPhoto + startShiftSession/endShiftSession
     - [x] 12c-3. Dashboard live banner -- in-progress banner with elapsed timer, start odometer, end button
   - [x] 12d. Chain the earnings screenshot into the end-of-shift flow so every `Shift` field is filled with no typing
-- [ ] 13. **Deploy to Vercel** - production deploy with env config and `prisma migrate deploy`
+- [x] 13. **Deploy to Vercel** - production deploy with env config and `prisma migrate deploy`
