@@ -6,8 +6,8 @@ const connectionString = `${process.env.DIRECT_URL}`;
 const adapter = new PrismaPg({ connectionString });
 const prisma = new PrismaClient({ adapter });
 
-const TEST_EMAIL = "pw-test@shiftrecorder.dev";
-const EMPTY_EMAIL = "pw-empty@shiftrecorder.dev";
+const TEST_EMAIL = "pw-test@gigwise.dev";
+const EMPTY_EMAIL = "pw-empty@gigwise.dev";
 
 async function teardown() {
   for (const email of [TEST_EMAIL, EMPTY_EMAIL]) {

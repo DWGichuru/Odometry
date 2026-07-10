@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-const KEY = "shiftrecorder-theme";
+const KEY = "gigwise-theme";
 
 export default function ThemeToggle() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");

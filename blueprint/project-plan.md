@@ -10,7 +10,7 @@
 Gig drivers have no simple way to see their earnings across platforms. Each app
 (Uber, Lyft, DoorDash) shows its own stats in its own place, so a driver can't
 tell how many hours, dollars, trips, and kilometers add up across a day, week, or
-platform. Shift Recorder lets a driver log each shift, by hand or from a
+platform. GigWise lets a driver log each shift, by hand or from a
 screenshot, and review combined earning statistics over time: total time worked,
 total earned, total trips, and total distance.
 

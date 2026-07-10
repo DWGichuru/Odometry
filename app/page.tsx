@@ -7,7 +7,7 @@ export default function LandingPage() {
       <header className="nav-bar">
         <div className="wrap">
           <Link href="/" className="brand">
-            <span className="mark">&#x25D0;</span> Shift Recorder
+            <span className="mark">&#x25D0;</span> GigWise
           </Link>
           <div className="nav-actions">
             <Link href="/sign-in" className="btn-primary" style={{ height: 40 }}>
@@ -59,7 +59,7 @@ export default function LandingPage() {
             <div className="float-badge br">3 platforms &middot; 1 total</div>
             <PhoneFrame
               src="/screens/dashboard.png"
-              alt="Shift Recorder dashboard on a phone"
+              alt="GigWise dashboard on a phone"
             />
           </div>
         </div>
@@ -247,7 +247,7 @@ export default function LandingPage() {
       <footer style={{ borderTop: "1px solid var(--border)", padding: "28px 0" }}>
         <div className="wrap-block" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13, color: "var(--muted)", flexWrap: "wrap", gap: 12 }}>
           <span className="brand" style={{ fontSize: 14 }}>
-            <span className="mark" style={{ width: 24, height: 24, fontSize: 12 }}>&#x25D0;</span> Shift Recorder
+            <span className="mark" style={{ width: 24, height: 24, fontSize: 12 }}>&#x25D0;</span> GigWise
           </span>
           <nav>
             <Link href="#" style={{ color: "var(--text-secondary)", marginLeft: 18 }}>Privacy</Link>

@@ -7,9 +7,9 @@ const connectionString = `${process.env.DIRECT_URL}`;
 const adapter = new PrismaPg({ connectionString });
 const prisma = new PrismaClient({ adapter });
 
-const TEST_EMAIL = "pw-test@shiftrecorder.dev";
+const TEST_EMAIL = "pw-test@gigwise.dev";
 const TEST_PASSWORD = "testpass123";
-const EMPTY_EMAIL = "pw-empty@shiftrecorder.dev";
+const EMPTY_EMAIL = "pw-empty@gigwise.dev";
 const EMPTY_PASSWORD = "testpass123";
 
 async function seed() {

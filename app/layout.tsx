@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Shift Recorder",
+  title: "GigWise",
   description: "Log your rideshare and delivery shifts across platforms.",
 };
 

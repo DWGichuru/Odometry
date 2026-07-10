@@ -18,7 +18,7 @@ async function seed() {
     data: {
       id: TEST_USER_ID,
       name: "Demo Driver",
-      email: "demo@shiftrecorder.dev",
+      email: "demo@gigwise.dev",
       currency: "USD",
       credential: {
         create: {

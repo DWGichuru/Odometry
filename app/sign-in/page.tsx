@@ -14,7 +14,7 @@ export default async function SignInPage({
       <div className="w-full max-w-sm rounded-lg border border-border bg-surface p-8 shadow-md">
         <div className="mb-8 text-center">
           <h1 className="text-[26px] font-bold tracking-tight leading-tight">
-            Shift Recorder
+            GigWise
           </h1>
           <p className="mt-2 text-[14px] text-muted">
             Sign in to your account

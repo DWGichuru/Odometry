@@ -1,4 +1,4 @@
-# Shift Recorder - Project Overview
+# GigWise - Project Overview
 
 > A mobile-first web app that lets gig drivers log each shift, by hand or from a
 > screenshot, and see their earnings combined across Uber, Lyft, and DoorDash.
@@ -8,7 +8,7 @@
 Gig drivers have no simple way to see their earnings across platforms. Each app
 (Uber, Lyft, DoorDash) shows its own stats in its own place, so a driver can't
 tell how many hours, dollars, trips, and kilometers add up across a day, week, or
-platform. Shift Recorder consolidates each shift into one place and reports the
+platform. GigWise consolidates each shift into one place and reports the
 totals that matter: time worked, amount earned, trips completed, and distance
 covered.
 
