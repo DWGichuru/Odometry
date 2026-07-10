@@ -176,6 +176,7 @@ export default async function TrendsPage({
           Tap a rate to hide it &middot; drag across the chart for any {hintPeriod}.
         </p>
         <TrendLineChart
+          key={period}
           labels={labels}
           tipLabels={tipLabels}
           series={ratesSeries}
@@ -194,6 +195,7 @@ export default async function TrendsPage({
           Tap a series to hide it &middot; drag across the chart for any {hintPeriod}.
         </p>
         <TrendLineChart
+          key={period}
           labels={labels}
           tipLabels={tipLabels}
           series={totalsSeries}
