@@ -44,7 +44,7 @@ Required for Vercel production deployment (set in Settings > Environment Variabl
 | `AUTH_SECRET` | NextAuth secret (`openssl rand -base64 32`) |
 | `AUTH_GOOGLE_ID` | Google OAuth client ID |
 | `AUTH_GOOGLE_SECRET` | Google OAuth client secret |
-| `AUTH_URL` | Production URL, e.g. `https://gigwise.vercel.app` |
+| `AUTH_URL` | Production URL, e.g. `https://odometry.vercel.app` |
 | `OPENAI_API_KEY` | OpenAI API key (vision model for screenshot/odometer extraction) |
 | `STRIPE_SECRET_KEY` | Stripe secret key |
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |

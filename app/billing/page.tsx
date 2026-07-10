@@ -23,7 +23,7 @@ export default async function BillingPage() {
       <div className="mx-auto w-full max-w-lg flex-1 p-4">
         <div className="pt-2 pb-4">
           <h1 className="text-[22px] font-bold tracking-[-0.02em]">Billing</h1>
-          <p className="mt-1 text-[14px] text-muted">Manage your GigWise plan.</p>
+          <p className="mt-1 text-[14px] text-muted">Manage your Odometry plan.</p>
         </div>
 
         <PlanCard />
@@ -73,7 +73,7 @@ export default async function BillingPage() {
     <div className="mx-auto w-full max-w-lg flex-1 p-4">
       <div className="pt-2 pb-4">
         <h1 className="text-[22px] font-bold tracking-[-0.02em]">Billing</h1>
-        <p className="mt-1 text-[14px] text-muted">Manage your GigWise plan.</p>
+        <p className="mt-1 text-[14px] text-muted">Manage your Odometry plan.</p>
       </div>
 
       <PlanCard />

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-const KEY = "gigwise-theme";
+const KEY = "odometry-theme";
 
 export default function ThemeToggle() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");

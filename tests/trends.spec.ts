@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
 
-const TEST_EMAIL = "pw-test@gigwise.dev";
+const TEST_EMAIL = "pw-test@odometry.dev";
 const TEST_PASSWORD = "testpass123";
-const EMPTY_EMAIL = "pw-empty@gigwise.dev";
+const EMPTY_EMAIL = "pw-empty@odometry.dev";
 
 async function signIn(page: ReturnType<typeof test["info"]>["page"]) {
   await page.goto("/sign-in");
