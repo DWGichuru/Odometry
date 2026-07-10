@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GigWise - dashboard, shift in progress</title>
+    <link rel="stylesheet" href="theme.css" />
+    <style>
+      .live-banner {
+        position: relative;
+        overflow: hidden;
+        margin: 12px 0 14px;
+        padding: 16px;
+        border-radius: var(--radius-lg);
+        border: 1px solid color-mix(in srgb, var(--live) 40%, var(--border));
+        background: linear-gradient(
+            120% 140% at 0% 0%,
+            var(--live-muted),
+            transparent 60%
+          ),
+          var(--surface);
+        box-shadow: var(--card-shadow);
+      }
+
+      .live-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .live-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--live);
+      }
+
+      .live-since {
+        font-size: 11.5px;
+        color: var(--muted);
+      }
+
+      .elapsed {
+        margin: 12px 0 2px;
+        font-size: 40px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .elapsed small {
+        font-size: 17px;
+        font-weight: 600;
+        color: var(--muted);
+        letter-spacing: 0;
+      }
+
+      .live-meta {
+        display: flex;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .chip-meta {
+        flex: 1;
+        padding: 10px 12px;
+        border-radius: var(--radius-md);
+        background: var(--surface-raised);
+      }
+
+      .chip-meta .l {
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .chip-meta .v {
+        margin-top: 3px;
+        font-family: var(--font-mono);
+        font-size: 15px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .live-banner .btn {
+        margin-top: 14px;
+        background: var(--live);
+        color: #05271c;
+      }
+
+      .week {
+        margin-bottom: 14px;
+        padding: 18px;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        background: radial-gradient(
+            120% 140% at 0% 0%,
+            color-mix(in srgb, var(--accent) 16%, transparent) 0%,
+            transparent 55%
+          ),
+          var(--surface);
+        box-shadow: var(--card-shadow);
+      }
+
+      .week .amount {
+        margin-top: 10px;
+        font-size: 42px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1;
+      }
+
+      .bars {
+        display: flex;
+        align-items: flex-end;
+        gap: 7px;
+        height: 62px;
+        margin-top: 20px;
+      }
+
+      .bars i {
+        flex: 1;
+        border-radius: 3px 3px 0 0;
+        background: color-mix(in srgb, var(--accent) 65%, var(--surface));
+      }
+
+      .bars i.today {
+        background: var(--live);
+        opacity: 0.55;
+      }
+
+      .day-row {
+        display: flex;
+        gap: 7px;
+        margin-top: 7px;
+      }
+
+      .day-row span {
+        flex: 1;
+        text-align: center;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--faint);
+      }
+
+      .day-row span.now {
+        color: var(--live);
+      }
+
+      .split-bar {
+        display: flex;
+        gap: 2px;
+        height: 10px;
+        margin-top: 18px;
+        border-radius: 5px;
+        overflow: hidden;
+      }
+
+      .legend-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 11px;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-secondary);
+      }
+
+      .legend-row span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .sw {
+        width: 8px;
+        height: 8px;
+        border-radius: 3px;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .stat {
+        padding: 13px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border);
+        background: var(--surface);
+      }
+
+      .stat .v {
+        font-size: 19px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+
+      .stat .l {
+        margin-top: 3px;
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .sec-title {
+        margin-bottom: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+
+      .shift-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 13px;
+        margin-bottom: 8px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border);
+        background: var(--surface);
+      }
+
+      .shift-row .bar {
+        width: 3px;
+        align-self: stretch;
+        border-radius: 999px;
+      }
+
+      .shift-row .who {
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .shift-row .when {
+        margin-top: 2px;
+        font-size: 11.5px;
+        color: var(--muted);
+      }
+
+      .shift-row .amt {
+        margin-left: auto;
+        text-align: right;
+      }
+
+      .shift-row .amt b {
+        font-size: 15px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .shift-row .amt div {
+        margin-top: 2px;
+        font-size: 11px;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="stage-head">
+        <h1>Dashboard with a shift in progress</h1>
+        <p>
+          The live banner sits above the weekly card, not in place of it, so the
+          driver still sees the week while the clock runs. Green means
+          <i>recording</i>, never <i>saved</i> - that is why it is a different
+          green from the success color.
+        </p>
+      </div>
+
+      <div class="stage-bar">
+        <div class="seg" id="seg-theme">
+          <button aria-pressed="true" onclick="setTheme('dark')">Dark</button>
+          <button aria-pressed="false" onclick="setTheme('light')">Light</button>
+        </div>
+      </div>
+
+      <nav class="nav-links">
+        <a href="entry-sheet.html">Entry sheet</a>
+        <a href="capture.html">Camera capture</a>
+        <a href="dashboard-live.html" aria-current="page">Dashboard (live)</a>
+        <a href="end-chain.html">End-of-shift chain</a>
+      </nav>
+
+      <div class="device">
+        <div class="notch"></div>
+        <div class="screen">
+          <div class="statusbar"><span>11:55</span><span>▮▮▮ ▾ 74%</span></div>
+
+          <div class="body">
+            <div class="scroll">
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0 2px">
+                <div class="page-title">Dashboard</div>
+                <div class="pill" style="border: 1px solid var(--border); background: var(--surface-raised); color: var(--text-secondary)">
+                  ‹ Jul 6 - 12 ›
+                </div>
+              </div>
+
+              <section class="live-banner">
+                <div class="live-top">
+                  <span class="live-tag"><span class="dot-live"></span> Shift in progress</span>
+                  <span class="live-since">Started 9:41 AM</span>
+                </div>
+
+                <div class="elapsed">2:14<small> elapsed</small></div>
+
+                <div class="live-meta">
+                  <div class="chip-meta">
+                    <div class="l">Start odometer</div>
+                    <div class="v">048231 km</div>
+                  </div>
+                  <div class="chip-meta">
+                    <div class="l">Distance so far</div>
+                    <div class="v">— km</div>
+                  </div>
+                </div>
+
+                <button class="btn">
+                  <span>⏹</span>
+                  End shift · snap odometer
+                </button>
+              </section>
+
+              <section class="week">
+                <div class="eyebrow-sm">Earned this week</div>
+                <div class="amount tabular">$842.50</div>
+                <div class="pill" style="margin-top: 10px; background: var(--surface-raised); color: var(--text-secondary)">
+                  6 shifts logged · 1 running
+                </div>
+
+                <div class="bars">
+                  <i style="height: 46%"></i>
+                  <i style="height: 72%"></i>
+                  <i style="height: 30%"></i>
+                  <i style="height: 88%"></i>
+                  <i style="height: 61%"></i>
+                  <i style="height: 100%"></i>
+                  <i class="today" style="height: 22%"></i>
+                </div>
+                <div class="day-row">
+                  <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span>
+                  <span>S</span><span class="now">S</span>
+                </div>
+
+                <div class="split-bar">
+                  <div style="flex: 54; background: var(--uber)"></div>
+                  <div style="flex: 28; background: var(--doordash)"></div>
+                  <div style="flex: 18; background: var(--lyft)"></div>
+                </div>
+                <div class="legend-row">
+                  <span><i class="sw" style="background: var(--uber)"></i> Uber <b class="tabular" style="color: var(--muted); font-weight: 500">$455.00</b></span>
+                  <span><i class="sw" style="background: var(--doordash)"></i> DoorDash <b class="tabular" style="color: var(--muted); font-weight: 500">$236.10</b></span>
+                  <span><i class="sw" style="background: var(--lyft)"></i> Lyft <b class="tabular" style="color: var(--muted); font-weight: 500">$151.40</b></span>
+                </div>
+              </section>
+
+              <div class="stats">
+                <div class="stat">
+                  <div class="v tabular">$31.40</div>
+                  <div class="l">Avg per hour</div>
+                </div>
+                <div class="stat">
+                  <div class="v tabular">$14.20</div>
+                  <div class="l">Avg per trip</div>
+                </div>
+                <div class="stat">
+                  <div class="v tabular">$0.94</div>
+                  <div class="l">Avg per km</div>
+                </div>
+              </div>
+
+              <div class="sec-title">This week's shifts</div>
+
+              <div class="shift-row">
+                <div class="bar" style="background: var(--uber)"></div>
+                <div>
+                  <div class="who">Uber</div>
+                  <div class="when">Sat 11 · 6.2h · 21 trips · 164.0 km</div>
+                </div>
+                <div class="amt">
+                  <b>$198.40</b>
+                  <div>📷 Odometer</div>
+                </div>
+              </div>
+
+              <div class="shift-row">
+                <div class="bar" style="background: var(--doordash)"></div>
+                <div>
+                  <div class="who">DoorDash</div>
+                  <div class="when">Fri 10 · 4.8h · 17 trips · 121.5 km</div>
+                </div>
+                <div class="amt">
+                  <b>$132.90</b>
+                  <div>🖼 Screenshot</div>
+                </div>
+              </div>
+
+              <div class="shift-row">
+                <div class="bar" style="background: var(--lyft)"></div>
+                <div>
+                  <div class="who">Lyft</div>
+                  <div class="when">Thu 9 · 5.1h · 14 trips · 138.2 km</div>
+                </div>
+                <div class="amt">
+                  <b>$151.40</b>
+                  <div>✎ Manual</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <nav class="bottom-nav">
+            <a href="#" class="active"><span>⌂</span>Dashboard</a>
+            <a href="#"><span>☰</span>Shifts</a>
+            <a href="#"><span>📈</span>Trends</a>
+            <a href="#"><span>👤</span>Profile</a>
+            <div class="fab-slot">
+              <button class="fab live">
+                <span class="dot-live" style="background: #05271c; box-shadow: none"></span>
+                2:14
+              </button>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function setTheme(t) {
+        document.documentElement.dataset.theme = t;
+        document
+          .getElementById("seg-theme")
+          .querySelectorAll("button")
+          .forEach((b, i) => b.setAttribute("aria-pressed", i === (t === "dark" ? 0 : 1)));
+      }
+    </script>
+  </body>
+</html>

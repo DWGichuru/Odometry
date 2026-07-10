@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GigWise - odometer capture</title>
+    <link rel="stylesheet" href="theme.css" />
+    <style>
+      .viewfinder {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        background: #0a0c0f;
+      }
+
+      /* stand-in for the live camera feed: a dim dashboard cluster */
+      .feed {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(120% 80% at 50% 40%, #2b3038, #0a0c0f 70%);
+      }
+
+      .cluster {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 300px;
+        text-align: center;
+      }
+
+      .cluster .lcd {
+        display: inline-flex;
+        gap: 3px;
+        padding: 10px 12px;
+        border-radius: 6px;
+        background: #0f1512;
+        box-shadow: 0 0 24px rgba(120, 255, 190, 0.12), inset 0 0 12px #000;
+      }
+
+      .cluster .lcd span {
+        width: 22px;
+        padding: 3px 0;
+        border-radius: 2px;
+        background: #131a16;
+        color: #7dffc4;
+        font-family: var(--font-mono);
+        font-size: 25px;
+        font-weight: 700;
+        text-shadow: 0 0 9px rgba(125, 255, 196, 0.6);
+      }
+
+      .cluster .unit {
+        margin-top: 9px;
+        color: #6f7d76;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        letter-spacing: 0.02em;
+      }
+
+      .cluster .needle {
+        margin: 26px auto 0;
+        width: 150px;
+        height: 150px;
+        border-radius: 999px;
+        border: 6px solid rgba(255, 255, 255, 0.06);
+        border-top-color: rgba(255, 255, 255, 0.14);
+        opacity: 0.5;
+      }
+
+      .scrim {
+        position: absolute;
+        inset: 0;
+        background: var(--overlay-scrim);
+        -webkit-mask: linear-gradient(#000, #000) content-box,
+          linear-gradient(#000, #000);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        /* the hole must match .guide exactly, or its edge shows as a seam */
+        padding: 260px 26px 340px;
+      }
+
+      .guide {
+        position: absolute;
+        top: 260px;
+        left: 26px;
+        right: 26px;
+        height: 180px;
+        border-radius: var(--radius-lg);
+        box-shadow: 0 0 0 2px var(--guide-stroke);
+        pointer-events: none;
+      }
+
+      .guide::before,
+      .guide::after {
+        content: "";
+        position: absolute;
+        width: 26px;
+        height: 26px;
+        border: 3px solid var(--guide-stroke);
+      }
+
+      .guide::before {
+        top: -3px;
+        left: -3px;
+        border-right: 0;
+        border-bottom: 0;
+        border-radius: var(--radius-lg) 0 0 0;
+      }
+
+      .guide::after {
+        bottom: -3px;
+        right: -3px;
+        border-left: 0;
+        border-top: 0;
+        border-radius: 0 0 var(--radius-lg) 0;
+      }
+
+      .hint {
+        position: absolute;
+        top: 456px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        color: var(--overlay-ink);
+        font-size: 13.5px;
+        font-weight: 600;
+        text-shadow: 0 1px 8px #000;
+      }
+
+      .cam-head {
+        position: absolute;
+        top: 52px;
+        left: 0;
+        right: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 18px;
+        z-index: 20;
+      }
+
+      .cam-head .title {
+        color: #fff;
+        font-size: 14.5px;
+        font-weight: 700;
+      }
+
+      .round {
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 999px;
+        background: var(--overlay-chrome);
+        backdrop-filter: blur(8px);
+        color: var(--overlay-ink);
+        font-size: 16px;
+        cursor: pointer;
+      }
+
+      .cam-foot {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 132px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 34px;
+        background: linear-gradient(transparent, rgba(6, 8, 11, 0.86) 45%);
+        z-index: 20;
+      }
+
+      .shutter {
+        width: 72px;
+        height: 72px;
+        border: 4px solid rgba(255, 255, 255, 0.85);
+        border-radius: 999px;
+        background: transparent;
+        padding: 5px;
+        cursor: pointer;
+      }
+
+      .shutter i {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border-radius: 999px;
+        background: #fff;
+      }
+
+      /* processing */
+      .frozen .feed {
+        filter: brightness(0.45) saturate(0.6);
+      }
+
+      .processing-panel,
+      .review-panel {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 25;
+        padding: 20px 16px 26px;
+        background: var(--surface);
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        border: 1px solid var(--border);
+        border-bottom: 0;
+        box-shadow: var(--card-shadow);
+      }
+
+      .processing-panel {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+        padding: 42px 16px 48px;
+      }
+
+      .spinner {
+        width: 38px;
+        height: 38px;
+        border: 3px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 999px;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .reading {
+        display: flex;
+        align-items: baseline;
+        justify-content: center;
+        gap: 8px;
+        padding: 18px 0 16px;
+      }
+
+      .reading .digits {
+        font-family: var(--font-mono);
+        font-size: 40px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .reading .unit {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+
+      .conf {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        justify-content: center;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 12.5px;
+        font-weight: 600;
+        width: fit-content;
+        margin: 0 auto;
+      }
+
+      .conf.high {
+        background: var(--confidence-high-muted);
+        color: var(--confidence-high);
+      }
+
+      .conf.low {
+        background: var(--confidence-low-muted);
+        color: var(--confidence-low);
+      }
+
+      .warn {
+        display: flex;
+        gap: 10px;
+        margin-top: 14px;
+        padding: 12px;
+        border-radius: var(--radius-md);
+        background: var(--confidence-low-muted);
+        border: 1px solid color-mix(in srgb, var(--warning) 35%, transparent);
+      }
+
+      .warn .txt {
+        font-size: 12.5px;
+        line-height: 1.45;
+        color: var(--text-secondary);
+      }
+
+      .field {
+        margin-top: 14px;
+      }
+
+      .field label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 11.5px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+
+      .field input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        background: var(--background);
+        color: var(--foreground);
+        font: inherit;
+        font-family: var(--font-mono);
+        font-size: 17px;
+        letter-spacing: 0.06em;
+      }
+
+      .field input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-muted);
+      }
+
+      .thumb {
+        position: absolute;
+        top: -44px;
+        left: 16px;
+        width: 62px;
+        height: 62px;
+        border-radius: var(--radius-md);
+        border: 3px solid var(--surface);
+        background: radial-gradient(120% 90% at 50% 40%, #2b3038, #0a0c0f);
+        box-shadow: var(--card-shadow);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        color: #7dffc4;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      .meta {
+        margin-top: 12px;
+        text-align: center;
+        font-size: 11.5px;
+        color: var(--muted);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="stage-head">
+        <h1>Odometer capture - full-bleed camera</h1>
+        <p>
+          One screen, four states. The framing guide keeps the reading in the
+          crop the vision model sees; the review panel is where a bad read gets
+          caught before it ever becomes a shift. Start and end differ only in
+          header and confirm action.
+        </p>
+      </div>
+
+      <div class="stage-bar">
+        <div class="seg" id="seg-state">
+          <button aria-pressed="true" onclick="setState('framing')">Framing</button>
+          <button aria-pressed="false" onclick="setState('processing')">Processing</button>
+          <button aria-pressed="false" onclick="setState('confident')">Review · confident</button>
+          <button aria-pressed="false" onclick="setState('flagged')">Review · flagged</button>
+        </div>
+      </div>
+      <div class="stage-bar">
+        <div class="seg" id="seg-end">
+          <button aria-pressed="true" onclick="setEnd(false)">Start of shift</button>
+          <button aria-pressed="false" onclick="setEnd(true)">End of shift</button>
+        </div>
+        <div class="seg" id="seg-theme">
+          <button aria-pressed="true" onclick="setTheme('dark')">Dark</button>
+          <button aria-pressed="false" onclick="setTheme('light')">Light</button>
+        </div>
+      </div>
+
+      <nav class="nav-links">
+        <a href="entry-sheet.html">Entry sheet</a>
+        <a href="capture.html" aria-current="page">Camera capture</a>
+        <a href="dashboard-live.html">Dashboard (live)</a>
+        <a href="end-chain.html">End-of-shift chain</a>
+      </nav>
+
+      <div class="device">
+        <div class="notch"></div>
+        <div class="screen" id="screen">
+          <div class="viewfinder" id="viewfinder">
+            <div class="feed">
+              <div class="cluster">
+                <div class="lcd">
+                  <span>0</span><span>4</span><span>8</span><span>2</span><span>3</span><span>1</span>
+                </div>
+                <div class="unit">km</div>
+                <div class="needle"></div>
+              </div>
+            </div>
+
+            <div class="scrim" id="scrim"></div>
+            <div class="guide" id="guide"></div>
+            <div class="hint" id="hint">Line up the odometer inside the frame</div>
+          </div>
+
+          <div class="statusbar on-camera"><span>9:41</span><span>▮▮▮ ▾ 82%</span></div>
+
+          <div class="cam-head">
+            <button class="round">✕</button>
+            <div class="title" id="cam-title">Start odometer</div>
+            <button class="round">⚡</button>
+          </div>
+
+          <div class="cam-foot" id="cam-foot">
+            <button class="round" title="Pick from gallery">🖼</button>
+            <button class="shutter" onclick="setState('processing')"><i></i></button>
+            <button class="round" title="Torch">⚡</button>
+          </div>
+
+          <!-- processing -->
+          <div class="processing-panel hidden" id="panel-processing">
+            <div class="spinner"></div>
+            <div style="text-align: center">
+              <div style="font-size: 15px; font-weight: 600">Reading the odometer…</div>
+              <div style="margin-top: 4px; font-size: 12.5px; color: var(--muted)">
+                Checking the number against your last shift.
+              </div>
+            </div>
+          </div>
+
+          <!-- review: confident -->
+          <div class="review-panel hidden" id="panel-confident">
+            <div class="thumb">048231</div>
+            <div class="conf high">
+              <span>✓</span>
+              Read clearly
+            </div>
+            <div class="reading">
+              <span class="digits">048231</span>
+              <span class="unit">km</span>
+            </div>
+            <div class="meta" id="meta-confident">
+              Continues from your last shift (048219 km). Shift starts at <b>9:41 AM</b>.
+            </div>
+            <div class="actions">
+              <button class="btn btn-quiet" style="flex: 1" onclick="setState('framing')">Retake</button>
+              <button class="btn btn-accent" style="flex: 2" id="confirm-confident">Start shift</button>
+            </div>
+          </div>
+
+          <!-- review: flagged -->
+          <div class="review-panel hidden" id="panel-flagged">
+            <div class="thumb">0482.3</div>
+            <div class="conf low">
+              <span>!</span>
+              Check this reading
+            </div>
+            <div class="reading">
+              <span class="digits">0482.3</span>
+              <span class="unit">km</span>
+            </div>
+
+            <div class="warn">
+              <span>⚠️</span>
+              <span class="txt">
+                That looks like a <b>trip meter</b>, not the odometer. It also
+                falls well below your last reading of 048219 km. Point at the
+                total-distance display, or type the number in.
+              </span>
+            </div>
+
+            <div class="field">
+              <label for="odo">Start odometer (km)</label>
+              <input id="odo" value="0482.3" inputmode="decimal" />
+            </div>
+
+            <div class="actions">
+              <button class="btn btn-quiet" style="flex: 1" onclick="setState('framing')">Retake</button>
+              <button class="btn btn-accent" style="flex: 2" id="confirm-flagged">Use this reading</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let ending = false;
+
+      function setTheme(t) {
+        document.documentElement.dataset.theme = t;
+        press("seg-theme", t === "dark" ? 0 : 1);
+      }
+
+      function press(segId, i) {
+        document
+          .getElementById(segId)
+          .querySelectorAll("button")
+          .forEach((b, j) => b.setAttribute("aria-pressed", i === j));
+      }
+
+      function setEnd(v) {
+        ending = v;
+        press("seg-end", v ? 1 : 0);
+        document.getElementById("cam-title").textContent = v
+          ? "End odometer"
+          : "Start odometer";
+        document.querySelector("#panel-flagged label").textContent = v
+          ? "End odometer (km)"
+          : "Start odometer (km)";
+        document.getElementById("confirm-confident").textContent = v
+          ? "Confirm and continue"
+          : "Start shift";
+        document.getElementById("confirm-flagged").textContent = v
+          ? "Use this reading"
+          : "Use this reading";
+        document.getElementById("meta-confident").innerHTML = v
+          ? "288.0 km covered since 9:41 AM. Shift ends at <b>4:07 PM</b>."
+          : "Continues from your last shift (048219 km). Shift starts at <b>9:41 AM</b>.";
+      }
+
+      function setState(s) {
+        const framing = s === "framing";
+        const order = ["framing", "processing", "confident", "flagged"];
+        press("seg-state", order.indexOf(s));
+
+        document.getElementById("screen").classList.toggle("frozen", !framing);
+        ["scrim", "guide", "hint", "cam-foot"].forEach((id) =>
+          document.getElementById(id).classList.toggle("hidden", !framing),
+        );
+        document.getElementById("panel-processing").classList.toggle("hidden", s !== "processing");
+        document.getElementById("panel-confident").classList.toggle("hidden", s !== "confident");
+        document.getElementById("panel-flagged").classList.toggle("hidden", s !== "flagged");
+
+        if (s === "processing") {
+          setTimeout(() => {
+            const active = document.querySelectorAll("#seg-state button")[1];
+            if (active.getAttribute("aria-pressed") === "true") setState("confident");
+          }, 1600);
+        }
+      }
+    </script>
+  </body>
+</html>
