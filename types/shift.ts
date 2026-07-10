@@ -7,6 +7,7 @@ export enum Platform {
 export enum EntrySource {
   MANUAL = "MANUAL",
   SCREENSHOT = "SCREENSHOT",
+  ODOMETER = "ODOMETER",
 }
 
 export interface Shift {

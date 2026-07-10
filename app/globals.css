@@ -39,7 +39,20 @@
     ),
     radial-gradient(900px 480px at 8% 8%, rgba(255, 0, 191, 0.08), transparent 55%);
   --accent-gradient: linear-gradient(135deg, #2563eb, #4f46e5);
+  --accent-gradient-strong: linear-gradient(135deg, #1d4ed8, #4338ca);
   --platform-gradient: linear-gradient(90deg, var(--uber), var(--lyft), var(--doordash));
+
+  --overlay-scrim: rgba(6, 8, 11, 0.72);
+  --overlay-chrome: rgba(15, 18, 24, 0.66);
+  --overlay-ink: #f1f5f9;
+  --overlay-ink-muted: #94a3b8;
+  --guide-stroke: #3b82f6;
+  --live: #10b981;
+  --live-muted: rgba(16, 185, 129, 0.14);
+  --confidence-high: var(--success);
+  --confidence-high-muted: var(--success-muted);
+  --confidence-low: var(--warning);
+  --confidence-low-muted: var(--warning-muted);
 
   --card-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
   --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.06);
@@ -71,6 +84,7 @@
       ),
       radial-gradient(900px 520px at 6% 6%, rgba(255, 0, 191, 0.1), transparent 55%);
     --accent-gradient: linear-gradient(135deg, #3b82f6, #6366f1);
+    --accent-gradient-strong: linear-gradient(135deg, #2563eb, #4f46e5);
   }
 }
 
@@ -99,6 +113,7 @@
     ),
     radial-gradient(900px 520px at 6% 6%, rgba(255, 0, 191, 0.1), transparent 55%);
   --accent-gradient: linear-gradient(135deg, #3b82f6, #6366f1);
+  --accent-gradient-strong: linear-gradient(135deg, #2563eb, #4f46e5);
 }
 
 @theme inline {
@@ -123,6 +138,17 @@
   --color-uber: var(--uber);
   --color-lyft: var(--lyft);
   --color-doordash: var(--doordash);
+  --color-overlay-scrim: var(--overlay-scrim);
+  --color-overlay-chrome: var(--overlay-chrome);
+  --color-overlay-ink: var(--overlay-ink);
+  --color-overlay-ink-muted: var(--overlay-ink-muted);
+  --color-guide-stroke: var(--guide-stroke);
+  --color-live: var(--live);
+  --color-live-muted: var(--live-muted);
+  --color-confidence-high: var(--confidence-high);
+  --color-confidence-high-muted: var(--confidence-high-muted);
+  --color-confidence-low: var(--confidence-low);
+  --color-confidence-low-muted: var(--confidence-low-muted);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --radius-sm: 8px;
