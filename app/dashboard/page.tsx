@@ -8,6 +8,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { NoticeBanner } from "@/components/billing/NoticeBanner";
+import LiveBanner from "@/components/dashboard/LiveBanner";
 import Link from "next/link";
 
 function daysBetween(a: Date, b: Date): number {
@@ -186,6 +187,8 @@ export default async function DashboardPage({
           <Link href="/billing" className="underline hover:no-underline">Subscribe now</Link> to keep logging shifts without interruption.
         </NoticeBanner>
       )}
+
+      <LiveBanner />
 
       {shifts.length === 0 ? (
         <div className="rounded-lg border border-border bg-surface p-10 text-center shadow-md">
