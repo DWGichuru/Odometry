@@ -189,7 +189,7 @@ export default function ShiftForm({ shift }: ShiftFormProps) {
         </fieldset>
 
         <div className="grid grid-cols-2 gap-3">
-          <div>
+          <div className="min-w-0">
             <label htmlFor="startTime" className={labelClasses}>
               Start time
             </label>
@@ -205,7 +205,7 @@ export default function ShiftForm({ shift }: ShiftFormProps) {
               <p className={errorClasses}>{errors.startTime}</p>
             )}
           </div>
-          <div>
+          <div className="min-w-0">
             <label htmlFor="endTime" className={labelClasses}>
               End time
             </label>
