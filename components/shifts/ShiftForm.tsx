@@ -42,10 +42,22 @@ export default function ShiftForm({ shift }: ShiftFormProps) {
     (shift?.platform as Platform) ?? Platform.UBER,
   );
   const [startTime, setStartTime] = useState(
-    shift ? new Date(shift.startTime).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : "",
+    shift
+      ? new Date(shift.startTime).toLocaleTimeString("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: "UTC",
+        })
+      : "",
   );
   const [endTime, setEndTime] = useState(
-    shift ? new Date(shift.endTime).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : "",
+    shift
+      ? new Date(shift.endTime).toLocaleTimeString("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: "UTC",
+        })
+      : "",
   );
   const [amountEarned, setAmountEarned] = useState(
     shift ? String(shift.amountEarned) : "",

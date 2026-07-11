@@ -89,15 +89,14 @@ export function buildShift(
 
   const distanceKm = Math.round((endOdometer - startOdometer) * 100) / 100;
 
-  const startDate = new Date(`${date}T00:00:00`);
   const [sh, sm] = data.startTime.split(":").map(Number);
   const [eh, em] = data.endTime.split(":").map(Number);
-  startDate.setHours(sh, sm);
+  const [year, month, day] = date.split("-").map(Number);
 
-  const endDate = new Date(`${date}T00:00:00`);
-  endDate.setHours(eh, em);
+  const startDate = new Date(Date.UTC(year, month - 1, day, sh, sm));
+  const endDate = new Date(Date.UTC(year, month - 1, day, eh, em));
   if (endDate <= startDate) {
-    endDate.setDate(endDate.getDate() + 1);
+    endDate.setUTCDate(endDate.getUTCDate() + 1);
   }
 
   const now = new Date().toISOString();

@@ -246,7 +246,7 @@ describe("buildShift", () => {
     expect(hours).toBeCloseTo(7.5, 1);
     const endDate = new Date(shift.endTime);
     const startDate = new Date(shift.startTime);
-    expect(endDate.getDate()).toBe(startDate.getDate() + 1);
+    expect(endDate.getUTCDate()).toBe(startDate.getUTCDate() + 1);
   });
 
   it("handles same-day shift (end > start)", () => {
@@ -258,6 +258,6 @@ describe("buildShift", () => {
     expect(hours).toBeCloseTo(8, 1);
     const endDate = new Date(shift.endTime);
     const startDate = new Date(shift.startTime);
-    expect(endDate.getDate()).toBe(startDate.getDate());
+    expect(endDate.getUTCDate()).toBe(startDate.getUTCDate());
   });
 });
