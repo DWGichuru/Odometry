@@ -8,6 +8,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { NoticeBanner } from "@/components/billing/NoticeBanner";
+import InstallBanner from "@/components/dashboard/InstallBanner";
 import LiveBanner from "@/components/dashboard/LiveBanner";
 import Link from "next/link";
 
@@ -189,6 +190,8 @@ export default async function DashboardPage({
       )}
 
       <LiveBanner />
+
+      <InstallBanner />
 
       {shifts.length === 0 ? (
         <div className="rounded-lg border border-border bg-surface p-10 text-center shadow-md">
