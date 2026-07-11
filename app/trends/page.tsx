@@ -2,6 +2,8 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { aggregateTrends } from "@/lib/trends";
+import { currencySymbol } from "@/lib/currency";
+import { kmToMiles, KM_PER_MILE } from "@/lib/units";
 import TrendLineChart from "@/components/trends/TrendLineChart";
 import Link from "next/link";
 
@@ -15,6 +17,16 @@ export default async function TrendsPage({
 
   const params = await searchParams;
   const period = params.period === "month" ? "month" : "week";
+
+  const userPrefs = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { currency: true, distanceUnit: true },
+  });
+  const currencyCode = userPrefs?.currency ?? "USD";
+  const moneyUnit = currencySymbol(currencyCode);
+  const distanceUnit = userPrefs?.distanceUnit ?? "MI";
+  const distanceLabel = distanceUnit === "MI" ? "mi" : "km";
+  const distanceMultiplier = distanceUnit === "MI" ? KM_PER_MILE : 1;
 
   const dbShifts = await prisma.shift.findMany({
     where: { userId: session.user.id },
@@ -66,7 +78,9 @@ export default async function TrendsPage({
   const tipLabels = points.map((p) => p.tipLabel);
 
   const maxRate = Math.max(
-    ...points.map((p) => Math.max(p.earningsPerHour, p.earningsPerTrip, p.earningsPerKm)),
+    ...points.map((p) =>
+      Math.max(p.earningsPerHour, p.earningsPerTrip, p.earningsPerKm * distanceMultiplier),
+    ),
     0,
   );
   const sharedMax = Math.ceil(maxRate / 2) * 2 + 2;
@@ -76,7 +90,7 @@ export default async function TrendsPage({
       key: "hour",
       name: "Per hour",
       color: "var(--chart-earnings)",
-      unit: "$",
+      unit: moneyUnit,
       on: true,
       end: true,
       data: points.map((p) => p.earningsPerHour),
@@ -85,19 +99,19 @@ export default async function TrendsPage({
       key: "trip",
       name: "Per trip",
       color: "var(--chart-hours)",
-      unit: "$",
+      unit: moneyUnit,
       on: true,
       end: true,
       data: points.map((p) => p.earningsPerTrip),
     },
     {
       key: "km",
-      name: "Per km",
+      name: `Per ${distanceLabel}`,
       color: "var(--chart-trips)",
-      unit: "$",
+      unit: moneyUnit,
       on: true,
       end: true,
-      data: points.map((p) => p.earningsPerKm),
+      data: points.map((p) => p.earningsPerKm * distanceMultiplier),
     },
   ];
 
@@ -106,7 +120,7 @@ export default async function TrendsPage({
       key: "earn",
       name: "Earnings",
       color: "var(--chart-earnings)",
-      unit: "$",
+      unit: moneyUnit,
       area: true,
       on: true,
       end: true,
@@ -136,11 +150,13 @@ export default async function TrendsPage({
       key: "km",
       name: "Distance",
       color: "var(--chart-km)",
-      unit: "km",
+      unit: distanceLabel,
       area: false,
       on: false,
       end: false,
-      data: points.map((p) => p.totalDistanceKm),
+      data: points.map((p) =>
+        distanceUnit === "MI" ? kmToMiles(p.totalDistanceKm) : p.totalDistanceKm,
+      ),
     },
   ];
 
@@ -170,7 +186,7 @@ export default async function TrendsPage({
       <section className="mb-4 rounded-lg border border-border bg-surface shadow-md p-5">
         <div className="flex items-baseline justify-between mb-1">
           <span className="text-[15px] font-semibold tracking-[-0.01em]">Your rates</span>
-          <span className="text-xs font-medium text-muted">Per hour, trip &amp; km</span>
+          <span className="text-xs font-medium text-muted">Per hour, trip &amp; {distanceLabel}</span>
         </div>
         <p className="text-xs text-muted mb-2">
           Tap a rate to hide it &middot; drag across the chart for any {hintPeriod}.

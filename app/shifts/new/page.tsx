@@ -1,10 +1,16 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 import ShiftForm from "@/components/shifts/ShiftForm";
 
 export default async function NewShiftPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/sign-in");
+
+  const userPrefs = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { currency: true, distanceUnit: true },
+  });
 
   return (
     <div className="mx-auto w-full max-w-lg flex-1 p-4">
@@ -15,7 +21,10 @@ export default async function NewShiftPage() {
           it&apos;s back-calculated.
         </p>
       </div>
-      <ShiftForm />
+      <ShiftForm
+        currency={userPrefs?.currency ?? "USD"}
+        distanceUnit={userPrefs?.distanceUnit ?? "MI"}
+      />
     </div>
   );
 }

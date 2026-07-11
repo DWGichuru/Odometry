@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getOpenSession } from "@/actions/session";
 import type { ShiftSession } from "@/types/shift-session";
+import { kmToMiles } from "@/lib/units";
 
 function formatElapsed(seconds: number): string {
   const h = Math.floor(seconds / 3600);
@@ -20,7 +21,11 @@ function formatStartTime(iso: string): string {
   });
 }
 
-export default function LiveBanner() {
+interface LiveBannerProps {
+  distanceUnit: "KM" | "MI";
+}
+
+export default function LiveBanner({ distanceUnit }: LiveBannerProps) {
   const router = useRouter();
   const [session, setSession] = useState<ShiftSession | null>(null);
   const [elapsed, setElapsed] = useState(0);
@@ -51,6 +56,10 @@ export default function LiveBanner() {
   }, [session]);
 
   if (!session) return null;
+
+  const displayLabel = distanceUnit === "MI" ? "mi" : "km";
+  const displayStartOdometer =
+    distanceUnit === "MI" ? kmToMiles(session.startOdometer) : session.startOdometer;
 
   return (
     <section
@@ -83,7 +92,7 @@ export default function LiveBanner() {
             Start odometer
           </div>
           <div className="mt-[3px] font-mono text-[15px] font-bold tabular-nums">
-            {String(Math.round(session.startOdometer)).padStart(6, "0")} km
+            {String(Math.round(displayStartOdometer)).padStart(6, "0")} {displayLabel}
           </div>
         </div>
         <div className="flex-1 rounded-[var(--radius-md)] bg-surface-raised p-[10px] px-[12px]">
@@ -91,7 +100,7 @@ export default function LiveBanner() {
             Distance so far
           </div>
           <div className="mt-[3px] font-mono text-[15px] font-bold tabular-nums text-muted">
-            — km
+            — {displayLabel}
           </div>
         </div>
       </div>

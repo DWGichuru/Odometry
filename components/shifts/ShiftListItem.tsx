@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { PLATFORM_BADGE, PLATFORM_LABELS } from "@/lib/platform";
 import { deleteShift } from "@/actions/shifts";
+import { currencySymbol, formatMoney as formatMoneyIn } from "@/lib/currency";
+import { formatDistance } from "@/lib/units";
 
 interface ShiftListItemProps {
   id: string;
@@ -16,10 +18,8 @@ interface ShiftListItemProps {
   distanceKm: number;
   startOdometer: number;
   endOdometer: number;
-}
-
-function formatMoney(value: number): string {
-  return `$${value.toFixed(2)}`;
+  currency: string;
+  distanceUnit: "KM" | "MI";
 }
 
 function formatTime(iso: string): string {
@@ -46,9 +46,12 @@ export default function ShiftListItem({
   amountEarned,
   tripsCompleted,
   distanceKm,
+  currency,
+  distanceUnit,
 }: ShiftListItemProps) {
   const hours = shiftHours(endTime, startTime);
   const perHour = hours > 0 ? amountEarned / hours : 0;
+  const formatMoney = (value: number) => formatMoneyIn(value, currency);
   const [confirming, setConfirming] = useState(false);
   const [deleted, setDeleted] = useState(false);
   const [deleteError, setDeleteError] = useState(false);
@@ -87,7 +90,7 @@ export default function ShiftListItem({
         </span>
         <div className="text-[13px] leading-relaxed text-text-secondary">
           {formatTime(startTime)} &ndash; {formatTime(endTime)} &middot;{" "}
-          {tripsCompleted} trips &middot; {distanceKm} km
+          {tripsCompleted} trips &middot; {formatDistance(distanceKm, distanceUnit)}
         </div>
         <div className="mt-1.5 flex items-center gap-2">
           <Link
@@ -136,7 +139,7 @@ export default function ShiftListItem({
           {formatMoney(amountEarned)}
         </div>
         <div className="mt-0.5 text-xs font-semibold text-success">
-          ${Math.round(perHour)}/h
+          {currencySymbol(currency)}{Math.round(perHour)}/h
         </div>
       </div>
     </div>

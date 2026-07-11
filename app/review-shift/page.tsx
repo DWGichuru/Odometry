@@ -6,9 +6,12 @@ import Link from "next/link";
 import { getCompletedSession } from "@/actions/session";
 import { extractShiftFromScreenshot } from "@/actions/import";
 import { createShiftFromSession } from "@/actions/review-shift";
+import { getProfilePreferences } from "@/actions/profile";
 import type { ShiftSession } from "@/types/shift-session";
 import type { ExtractedShiftFields } from "@/lib/extract-parser";
 import { PLATFORM_LABELS } from "@/lib/platform";
+import { currencySymbol } from "@/lib/currency";
+import { kmToMiles } from "@/lib/units";
 
 type Step = "screenshot" | "loading" | "summary";
 
@@ -25,6 +28,8 @@ export default function ReviewShiftPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [currency, setCurrency] = useState("USD");
+  const [distanceUnit, setDistanceUnit] = useState<"KM" | "MI">("MI");
 
   useEffect(() => {
     getCompletedSession().then((result) => {
@@ -35,6 +40,14 @@ export default function ReviewShiftPage() {
       }
     });
   }, [router]);
+
+  useEffect(() => {
+    getProfilePreferences().then((result) => {
+      if ("error" in result) return;
+      setCurrency(result.currency);
+      setDistanceUnit(result.distanceUnit);
+    });
+  }, []);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -91,9 +104,13 @@ export default function ReviewShiftPage() {
 
   if (!session) return null;
 
-  const distanceKm =
+  const unit = distanceUnit === "MI" ? "mi" : "km";
+  const moneySymbol = currencySymbol(currency);
+  const toDisplay = (km: number) => (distanceUnit === "MI" ? kmToMiles(km) : km);
+
+  const distanceDisplay =
     session.endOdometer != null
-      ? (session.endOdometer - session.startOdometer).toFixed(1)
+      ? toDisplay(session.endOdometer - session.startOdometer).toFixed(1)
       : "0.0";
 
   const startedAt = new Date(session.startedAt);
@@ -142,14 +159,16 @@ export default function ReviewShiftPage() {
           </div>
           <div>
             <div className="text-[13.5px] font-semibold">
-              Shift closed · {duration} · {distanceKm} km
+              Shift closed · {duration} · {distanceDisplay} {unit}
             </div>
             <div className="text-[11.5px] text-muted">
               Time: {formatTime(startedAt)} → {formatTime(endedAt)}
             </div>
             <div className="text-[11.5px] text-muted">
-              Odometer: {formatOdo(session.startOdometer)} km →{" "}
-              {session.endOdometer != null ? `${formatOdo(session.endOdometer)} km` : "— km"}
+              Odometer: {formatOdo(toDisplay(session.startOdometer))} {unit} →{" "}
+              {session.endOdometer != null
+                ? `${formatOdo(toDisplay(session.endOdometer))} ${unit}`
+                : `— ${unit}`}
             </div>
           </div>
         </div>
@@ -263,7 +282,7 @@ export default function ReviewShiftPage() {
               Earned this shift
             </div>
             <div className="mt-[6px] text-[34px] font-bold leading-none tracking-[-0.03em] tabular-nums">
-              ${(extractedFields.amountEarned ?? 0).toFixed(2)}
+              {moneySymbol}{(extractedFields.amountEarned ?? 0).toFixed(2)}
             </div>
             <div
               className="mt-[8px] inline-flex items-center gap-[6px] rounded-full px-[10px] py-[4px] text-[12px] font-semibold"
@@ -314,7 +333,7 @@ export default function ReviewShiftPage() {
               <span className="text-[12px]">🖼</span>
               <span className="text-[13px] text-text-secondary">Amount earned</span>
               <span className="ml-auto text-[13.5px] font-semibold tabular-nums">
-                ${(extractedFields.amountEarned ?? 0).toFixed(2)}
+                {moneySymbol}{(extractedFields.amountEarned ?? 0).toFixed(2)}
               </span>
             </div>
             <div className="flex items-center gap-[12px] border-b border-border px-[14px] py-[8px]">
@@ -328,7 +347,7 @@ export default function ReviewShiftPage() {
               <span className="text-[12px]">📷</span>
               <span className="text-[13px] text-text-secondary">Start odometer</span>
               <span className="ml-auto text-[13.5px] font-semibold tabular-nums">
-                {formatOdo(session.startOdometer)} km
+                {formatOdo(toDisplay(session.startOdometer))} {unit}
               </span>
             </div>
             <div className="flex items-center gap-[12px] border-b border-border px-[14px] py-[8px]">
@@ -336,8 +355,8 @@ export default function ReviewShiftPage() {
               <span className="text-[13px] text-text-secondary">End odometer</span>
               <span className="ml-auto text-[13.5px] font-semibold tabular-nums">
                 {session.endOdometer != null
-                  ? `${formatOdo(session.endOdometer)} km`
-                  : "— km"}
+                  ? `${formatOdo(toDisplay(session.endOdometer))} ${unit}`
+                  : `— ${unit}`}
               </span>
             </div>
             <div
@@ -349,7 +368,7 @@ export default function ReviewShiftPage() {
               </span>
               <span className="text-[13px] font-bold text-accent">Distance covered</span>
               <span className="ml-auto text-[13.5px] font-bold tabular-nums text-accent">
-                {distanceKm} km
+                {distanceDisplay} {unit}
               </span>
             </div>
           </div>

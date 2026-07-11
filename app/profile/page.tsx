@@ -1,16 +1,8 @@
 import { auth, signOut } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { StatusBadge } from "@/components/billing/StatusBadge";
+import PreferencesForm from "@/components/profile/PreferencesForm";
 import Link from "next/link";
-
-const CURRENCY_NAMES: Record<string, string> = {
-  USD: "US Dollar",
-  EUR: "Euro",
-  GBP: "British Pound",
-  CAD: "Canadian Dollar",
-  AUD: "Australian Dollar",
-};
 
 function initials(name: string | null): string {
   if (!name) return "?";
@@ -47,6 +39,7 @@ export default async function ProfilePage() {
       name: true,
       email: true,
       currency: true,
+      distanceUnit: true,
       createdAt: true,
       subscription: {
         select: {
@@ -62,8 +55,6 @@ export default async function ProfilePage() {
 
   const displayName = user.name ?? "User";
   const displayEmail = user.email ?? "";
-  const currencyCode = user.currency ?? "USD";
-  const currencyName = CURRENCY_NAMES[currencyCode] ?? currencyCode;
 
   const sub = user.subscription;
   const trialEnd = sub?.freeTrialEndsAt
@@ -92,61 +83,24 @@ export default async function ProfilePage() {
         </span>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-border bg-surface shadow-md">
-        <div className="flex items-center justify-between border-b border-border-light px-4 py-3.5">
-          <span className="text-[14px] text-muted">Name</span>
-          <span className="text-[14px] font-semibold text-text-secondary">
-            {displayName}
-          </span>
-        </div>
-        <div className="flex items-center justify-between border-b border-border-light px-4 py-3.5">
-          <span className="text-[14px] text-muted">Email</span>
-          <span className="text-[14px] font-semibold text-text-secondary">
-            {displayEmail}
-          </span>
-        </div>
-        <div className="flex items-center justify-between border-b border-border-light px-4 py-3.5">
-          <span className="text-[14px] text-muted">Plan</span>
-          <span className="text-[14px] font-semibold text-text-secondary">
-            {sub ? (
-              <>
-                <StatusBadge
-                  variant={
-                    sub.status as "trialing" | "active" | "past_due" | "canceled"
-                  }
-                  label={
-                    sub.isLifetimeFree
-                      ? "Lifetime Free"
-                      : BADGE_LABELS[sub.status] ?? sub.status
-                  }
-                />{" "}
-                {trialDaysRemaining > 0 && sub.status === "trialing" && (
-                  <span className="text-[12px] font-medium text-muted">
-                    {trialDaysRemaining}d left
-                  </span>
-                )}
-              </>
-            ) : (
-              "—"
-            )}
-          </span>
-        </div>
-        <div className="flex items-center justify-between border-b border-border-light px-4 py-3.5">
-          <span className="text-[14px] text-muted">Currency</span>
-          <span className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-text-secondary">
-            <span className="rounded-md bg-surface-raised px-2 py-0.5 text-[12px] font-bold tracking-[0.02em]">
-              {currencyCode}
-            </span>{" "}
-            {currencyName}
-          </span>
-        </div>
-        <div className="flex items-center justify-between px-4 py-3.5">
-          <span className="text-[14px] text-muted">Member since</span>
-          <span className="text-[14px] font-semibold text-text-secondary">
-            {formatMemberSince(user.createdAt)}
-          </span>
-        </div>
-      </div>
+      <PreferencesForm
+        name={displayName}
+        email={displayEmail}
+        plan={
+          sub
+            ? {
+                status: sub.status as "trialing" | "active" | "past_due" | "canceled",
+                label: sub.isLifetimeFree
+                  ? "Lifetime Free"
+                  : BADGE_LABELS[sub.status] ?? sub.status,
+                trialDaysRemaining,
+              }
+            : null
+        }
+        memberSince={formatMemberSince(user.createdAt)}
+        currency={user.currency}
+        distanceUnit={user.distanceUnit}
+      />
 
       <Link
         href="/billing"

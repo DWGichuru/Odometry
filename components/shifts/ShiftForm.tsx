@@ -7,6 +7,8 @@ import { Platform } from "@/types/shift";
 import { isValid, validateShiftEntry } from "@/lib/shift-entry";
 import type { ShiftEntryErrors, ShiftFormData } from "@/lib/shift-entry";
 import { createShift, updateShift } from "@/actions/shifts";
+import { currencySymbol } from "@/lib/currency";
+import { kmToMiles } from "@/lib/units";
 
 type OdoMode = "odometer" | "distance";
 
@@ -22,6 +24,8 @@ interface ShiftFormProps {
     startOdometer: number;
     endOdometer: number;
   };
+  currency: string;
+  distanceUnit: "KM" | "MI";
 }
 
 function todayLocal(): string {
@@ -33,9 +37,16 @@ const inputClasses =
   "w-full rounded-sm border border-border bg-background px-3 py-2.5 text-[15px] tabular-nums focus:border-accent focus:ring-2 focus:ring-accent-muted focus:outline-none";
 const errorClasses = "mt-1 text-xs text-danger";
 
-export default function ShiftForm({ shift }: ShiftFormProps) {
+function toDisplayUnit(km: number, unit: "KM" | "MI"): string {
+  const value = unit === "MI" ? kmToMiles(km) : km;
+  return String(Math.round(value * 100) / 100);
+}
+
+export default function ShiftForm({ shift, currency, distanceUnit }: ShiftFormProps) {
   const router = useRouter();
   const editing = Boolean(shift);
+  const distanceLabel = distanceUnit === "MI" ? "mi" : "km";
+  const moneySymbol = currencySymbol(currency);
 
   const [date, setDate] = useState(shift?.date ?? todayLocal());
   const [platform, setPlatform] = useState<Platform>(
@@ -67,11 +78,11 @@ export default function ShiftForm({ shift }: ShiftFormProps) {
   );
   const [odoMode, setOdoMode] = useState<OdoMode>("odometer");
   const [startOdometer, setStartOdometer] = useState(
-    shift ? String(shift.startOdometer) : "",
+    shift ? toDisplayUnit(shift.startOdometer, distanceUnit) : "",
   );
   const [distance, setDistance] = useState("");
   const [endOdometer, setEndOdometer] = useState(
-    shift ? String(shift.endOdometer) : "",
+    shift ? toDisplayUnit(shift.endOdometer, distanceUnit) : "",
   );
 
   const [errors, setErrors] = useState<ShiftEntryErrors>({});
@@ -230,7 +241,7 @@ export default function ShiftForm({ shift }: ShiftFormProps) {
             </label>
             <div className="relative">
               <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-[15px] text-muted">
-                $
+                {moneySymbol}
               </span>
               <input
                 id="amountEarned"
@@ -303,7 +314,7 @@ export default function ShiftForm({ shift }: ShiftFormProps) {
             {odoMode === "odometer" ? (
               <div>
                 <label htmlFor="startOdometer" className={labelClasses}>
-                  Start odometer (km)
+                  Start odometer ({distanceLabel})
                 </label>
                 <input
                   id="startOdometer"
@@ -321,7 +332,7 @@ export default function ShiftForm({ shift }: ShiftFormProps) {
             ) : (
               <div>
                 <label htmlFor="distance" className={labelClasses}>
-                  Distance covered (km)
+                  Distance covered ({distanceLabel})
                 </label>
                 <input
                   id="distance"
@@ -339,7 +350,7 @@ export default function ShiftForm({ shift }: ShiftFormProps) {
             )}
             <div>
               <label htmlFor="endOdometer" className={labelClasses}>
-                End odometer (km)
+                End odometer ({distanceLabel})
               </label>
               <input
                 id="endOdometer"

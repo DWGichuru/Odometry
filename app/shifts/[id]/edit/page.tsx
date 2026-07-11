@@ -15,7 +15,13 @@ export default async function EditShiftPage({ params }: EditShiftPageProps) {
 
   const { id } = await params;
 
-  const dbShift = await prisma.shift.findUnique({ where: { id } });
+  const [dbShift, userPrefs] = await Promise.all([
+    prisma.shift.findUnique({ where: { id } }),
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { currency: true, distanceUnit: true },
+    }),
+  ]);
 
   if (!dbShift || dbShift.userId !== session.user.id) {
     notFound();
@@ -44,7 +50,11 @@ export default async function EditShiftPage({ params }: EditShiftPageProps) {
           Cancel
         </Link>
       </div>
-      <ShiftForm shift={shift} />
+      <ShiftForm
+        shift={shift}
+        currency={userPrefs?.currency ?? "USD"}
+        distanceUnit={userPrefs?.distanceUnit ?? "MI"}
+      />
       <div className="mt-6 flex justify-center">
         <DeleteShiftButton shiftId={shift.id} />
       </div>

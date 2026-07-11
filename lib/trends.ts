@@ -147,9 +147,11 @@ export function aggregateTrends(
   return points;
 }
 
+const CURRENCY_PREFIX_SYMBOLS = new Set(["$", "€", "£"]);
+
 export function formatTrendTotal(unit: string | undefined, value: number): string {
-  if (unit === "$")
-    return `$${value.toLocaleString(undefined, {
+  if (unit && CURRENCY_PREFIX_SYMBOLS.has(unit))
+    return `${unit}${value.toLocaleString(undefined, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;

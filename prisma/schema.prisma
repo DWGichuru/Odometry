@@ -32,6 +32,11 @@ enum SubscriptionStatus {
   canceled
 }
 
+enum DistanceUnit {
+  KM
+  MI
+}
+
 model User {
   id            String       @id @default(cuid())
   name          String?
@@ -39,6 +44,7 @@ model User {
   emailVerified DateTime?
   image         String?
   currency      String       @default("USD")
+  distanceUnit  DistanceUnit @default(MI)
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 

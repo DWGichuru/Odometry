@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { extractOdometerFromPhoto } from "@/actions/odometer-extract";
 import { startShiftSession, endShiftSession } from "@/actions/shift-session";
 import { getOpenSession } from "@/actions/session";
+import { kmToMiles, milesToKm } from "@/lib/units";
 
 interface CapturePageProps {
   searchParams: Promise<{ type?: string }>;
@@ -15,7 +16,7 @@ type AppState = "framing" | "processing" | "review";
 
 interface ReviewData {
   reading: number;
-  unit: string | null;
+  distanceUnit: "KM" | "MI";
   confidence: "high" | "low";
   warnings: string[];
   lastEndOdometer: number | null;
@@ -141,7 +142,11 @@ export default function CapturePage({ searchParams }: CapturePageProps) {
 
       setReviewData(result.data);
       setThumbnailUrl(`data:image/jpeg;base64,${base64}`);
-      setEditedReading(String(result.data.reading));
+      const displayReading =
+        result.data.distanceUnit === "MI"
+          ? kmToMiles(result.data.reading)
+          : result.data.reading;
+      setEditedReading(String(Math.round(displayReading)));
       setState("review");
     } catch {
       setErrorMessage("Could not read the odometer. Try a clearer photo.");
@@ -184,13 +189,21 @@ export default function CapturePage({ searchParams }: CapturePageProps) {
   const handleConfirm = useCallback(async () => {
     if (!reviewData) return;
     setConfirming(true);
-    const reading = parseFloat(editedReading) || reviewData.reading;
+    const displayReading =
+      reviewData.distanceUnit === "MI"
+        ? kmToMiles(reviewData.reading)
+        : reviewData.reading;
+    const enteredDisplay = parseFloat(editedReading) || displayReading;
+    const readingKm =
+      reviewData.distanceUnit === "MI"
+        ? milesToKm(enteredDisplay)
+        : enteredDisplay;
 
     try {
       const result =
         captureType === "start"
-          ? await startShiftSession(reading)
-          : await endShiftSession(reading);
+          ? await startShiftSession(readingKm)
+          : await endShiftSession(readingKm);
 
       if ("error" in result) {
         setErrorMessage(result.error);
@@ -205,10 +218,12 @@ export default function CapturePage({ searchParams }: CapturePageProps) {
     }
   }, [reviewData, editedReading, captureType, router]);
 
-  const reading = reviewData?.reading ?? 0;
+  const distanceUnit = reviewData?.distanceUnit ?? "MI";
+  const unit = distanceUnit === "MI" ? "mi" : "km";
+  const toDisplay = (km: number) => (distanceUnit === "MI" ? kmToMiles(km) : km);
+  const reading = reviewData ? toDisplay(reviewData.reading) : 0;
   const confidence = reviewData?.confidence ?? "low";
   const isConfident = confidence === "high";
-  const unit = reviewData?.unit ?? "km";
 
   const formatOdo = (v: number) =>
     String(Math.round(v)).padStart(6, "0");
@@ -217,12 +232,12 @@ export default function CapturePage({ searchParams }: CapturePageProps) {
     new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
   const startMetaText = reviewData?.lastEndOdometer
-    ? `Continues from your last shift (${formatOdo(reviewData.lastEndOdometer)} km). Shift starts at ${formatTime()}.`
+    ? `Continues from your last shift (${formatOdo(toDisplay(reviewData.lastEndOdometer))} ${unit}). Shift starts at ${formatTime()}.`
     : `Shift starts at ${formatTime()}.`;
 
   const endMetaText =
     sessionMeta && reviewData
-      ? `${(reading - sessionMeta.startOdometer).toFixed(1)} km covered since ${new Date(sessionMeta.startedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}. Shift ends at ${formatTime()}.`
+      ? `${toDisplay(reviewData.reading - sessionMeta.startOdometer).toFixed(1)} ${unit} covered since ${new Date(sessionMeta.startedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}. Shift ends at ${formatTime()}.`
       : `Shift ends at ${formatTime()}.`;
 
   return (
@@ -367,7 +382,7 @@ export default function CapturePage({ searchParams }: CapturePageProps) {
 
                 <div className="mt-[14px]">
                   <label className="mb-[6px] block text-[11.5px] font-semibold text-muted">
-                    {captureType === "end" ? "End odometer (km)" : "Start odometer (km)"}
+                    {captureType === "end" ? `End odometer (${unit})` : `Start odometer (${unit})`}
                   </label>
                   <input
                     type="text"

@@ -18,6 +18,13 @@ export default async function ShiftsPage() {
     select: { status: true, freeTrialEndsAt: true, isLifetimeFree: true },
   });
 
+  const userPrefs = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { currency: true, distanceUnit: true },
+  });
+  const currencyCode = userPrefs?.currency ?? "USD";
+  const distanceUnit = userPrefs?.distanceUnit ?? "MI";
+
   const trialEnd = sub?.freeTrialEndsAt
     ? new Date(sub.freeTrialEndsAt)
     : null;
@@ -110,6 +117,8 @@ export default async function ShiftsPage() {
               distanceKm={shift.distanceKm}
               startOdometer={shift.startOdometer}
               endOdometer={shift.endOdometer}
+              currency={currencyCode}
+              distanceUnit={distanceUnit}
             />
           ))}
         </div>

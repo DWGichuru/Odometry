@@ -1,12 +1,14 @@
 "use client";
 
-import { type FormEvent, useRef, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Platform, EntrySource } from "@/types/shift";
 import { PLATFORM_LABELS } from "@/lib/platform";
 import { extractShiftFromScreenshot } from "@/actions/import";
 import { createShift } from "@/actions/shifts";
+import { getProfilePreferences } from "@/actions/profile";
+import { currencySymbol } from "@/lib/currency";
 import type { ExtractedShiftFields } from "@/lib/extract-parser";
 
 type Step = "input" | "loading" | "review";
@@ -28,6 +30,19 @@ export default function ImportPage() {
   const [startOdo, setStartOdo] = useState("");
   const [endOdo, setEndOdo] = useState("");
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [currency, setCurrency] = useState("USD");
+  const [distanceUnit, setDistanceUnit] = useState<"KM" | "MI">("MI");
+
+  useEffect(() => {
+    getProfilePreferences().then((result) => {
+      if ("error" in result) return;
+      setCurrency(result.currency);
+      setDistanceUnit(result.distanceUnit);
+    });
+  }, []);
+
+  const distanceLabel = distanceUnit === "MI" ? "mi" : "km";
+  const moneySymbol = currencySymbol(currency);
 
   function defaultFields(): ExtractedShiftFields {
     return {
@@ -125,8 +140,8 @@ export default function ImportPage() {
   function computeDistance(): string {
     const s = Number(startOdo);
     const e = Number(endOdo);
-    if (Number.isNaN(s) || Number.isNaN(e) || e <= s) return "\u2014 km";
-    return `${(e - s).toFixed(1)} km`;
+    if (Number.isNaN(s) || Number.isNaN(e) || e <= s) return `\u2014 ${distanceLabel}`;
+    return `${(e - s).toFixed(1)} ${distanceLabel}`;
   }
 
   return (
@@ -356,7 +371,7 @@ export default function ImportPage() {
                 </label>
                 <div className="relative">
                   <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-[15px] text-muted">
-                    $
+                    {moneySymbol}
                   </span>
                   <input
                     id="review-amountEarned"
@@ -407,7 +422,7 @@ export default function ImportPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label htmlFor="review-startOdo" className={labelClasses}>
-                  Start odometer (km)
+                  Start odometer ({distanceLabel})
                 </label>
                 <input
                   id="review-startOdo"
@@ -420,7 +435,7 @@ export default function ImportPage() {
               </div>
               <div>
                 <label htmlFor="review-endOdo" className={labelClasses}>
-                  End odometer (km)
+                  End odometer ({distanceLabel})
                 </label>
                 <input
                   id="review-endOdo"

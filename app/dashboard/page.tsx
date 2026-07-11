@@ -11,6 +11,8 @@ import { NoticeBanner } from "@/components/billing/NoticeBanner";
 import InstallBanner from "@/components/dashboard/InstallBanner";
 import LiveBanner from "@/components/dashboard/LiveBanner";
 import Link from "next/link";
+import { formatMoney as formatMoneyIn } from "@/lib/currency";
+import { formatDistance, kmToMiles } from "@/lib/units";
 
 function daysBetween(a: Date, b: Date): number {
   return Math.ceil((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
@@ -18,10 +20,6 @@ function daysBetween(a: Date, b: Date): number {
 
 const DAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"];
 const MS_PER_HOUR = 3_600_000;
-
-function formatMoney(value: number): string {
-  return `$${value.toFixed(2)}`;
-}
 
 function shiftHours(endTime: string, startTime: string): number {
   return (
@@ -64,6 +62,15 @@ export default async function DashboardPage({
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/sign-in");
+
+  const userPrefs = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { currency: true, distanceUnit: true },
+  });
+  const currencyCode = userPrefs?.currency ?? "USD";
+  const distanceUnit = userPrefs?.distanceUnit ?? "MI";
+  const distanceLabel = distanceUnit === "MI" ? "mi" : "km";
+  const formatMoney = (value: number) => formatMoneyIn(value, currencyCode);
 
   const sub = await prisma.subscription.findUnique({
     where: { userId: session.user.id },
@@ -128,7 +135,9 @@ export default async function DashboardPage({
 
   const perHour = totalHours > 0 ? totalEarnings / totalHours : 0;
   const perTrip = totalTrips > 0 ? totalEarnings / totalTrips : 0;
-  const perKm = totalDistanceKm > 0 ? totalEarnings / totalDistanceKm : 0;
+  const totalDistance =
+    distanceUnit === "MI" ? kmToMiles(totalDistanceKm) : totalDistanceKm;
+  const perDistance = totalDistance > 0 ? totalEarnings / totalDistance : 0;
 
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(monday);
@@ -189,7 +198,7 @@ export default async function DashboardPage({
         </NoticeBanner>
       )}
 
-      <LiveBanner />
+      <LiveBanner distanceUnit={distanceUnit} />
 
       <InstallBanner />
 
@@ -340,10 +349,10 @@ export default async function DashboardPage({
               backValue={String(totalTrips)}
             />
             <StatCard
-              label="Avg per km"
-              value={formatMoney(perKm)}
+              label={`Avg per ${distanceLabel}`}
+              value={formatMoney(perDistance)}
               backLabel="Distance covered"
-              backValue={`${totalDistanceKm}km`}
+              backValue={formatDistance(totalDistanceKm, distanceUnit)}
             />
           </div>
 
@@ -367,6 +376,8 @@ export default async function DashboardPage({
                 distanceKm={shift.distanceKm}
                 startOdometer={shift.startOdometer}
                 endOdometer={shift.endOdometer}
+                currency={currencyCode}
+                distanceUnit={distanceUnit}
               />
             ))}
           </div>
