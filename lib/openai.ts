@@ -1,7 +1,8 @@
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 const MODEL = "gpt-4o-mini";
 
-const SCREENSHOT_EXTRACTION_PROMPT = `You are a shift data extractor. Extract the following fields from this rideshare earnings screenshot. Return ONLY a valid JSON object, no other text, no markdown, no explanation:
+function buildScreenshotExtractionPrompt(today: string): string {
+  return `You are a shift data extractor. Extract the following fields from this rideshare earnings screenshot. Return ONLY a valid JSON object, no other text, no markdown, no explanation:
 
 {
   "date": "YYYY-MM-DD",
@@ -13,7 +14,13 @@ const SCREENSHOT_EXTRACTION_PROMPT = `You are a shift data extractor. Extract th
   "endOdometer": number or null
 }
 
+Today's date is ${today}. Rideshare earnings screenshots often show a date with
+no year (e.g. "Thu, Jun 26"). If the screenshot's date has no year, infer it
+from today's date: use the current year, unless that would place the date in
+the future, in which case use the previous year instead.
+
 If a field is not visible in the screenshot, set it to null.`;
+}
 
 const ODOMETER_EXTRACTION_PROMPT = `You are an odometer reader. Read the odometer value from this car dashboard photo. Return ONLY a valid JSON object, no other text, no markdown, no explanation:
 
@@ -26,7 +33,9 @@ The reading is the main total-distance number, NOT the trip meter. If the photo 
 
 export async function callOpenAIVision(
   imageBase64: string,
-  prompt: string = SCREENSHOT_EXTRACTION_PROMPT,
+  prompt: string = buildScreenshotExtractionPrompt(
+    new Date().toISOString().slice(0, 10),
+  ),
 ): Promise<string> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
