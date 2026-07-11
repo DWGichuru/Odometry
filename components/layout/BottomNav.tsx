@@ -71,7 +71,7 @@ export default function BottomNav({ authenticated }: { authenticated: boolean })
       <EntrySheet open={sheetOpen} onClose={() => setSheetOpen(false)} />
 
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-stretch border-t border-border bg-[color-mix(in_srgb,var(--surface)_88%,transparent)] pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-xl"
+        className="fixed bottom-0 left-0 right-0 z-50 flex h-[calc(4rem+env(safe-area-inset-bottom,0px))] items-stretch border-t border-border bg-[color-mix(in_srgb,var(--surface)_88%,transparent)] pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-xl"
       >
       <Link
         href="/dashboard"

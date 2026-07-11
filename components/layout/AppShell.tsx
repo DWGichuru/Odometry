@@ -20,7 +20,9 @@ export default function AppShell({ children, authenticated }: AppShellProps) {
     <InstallPromptProvider>
       <ServiceWorkerRegistration />
       <ConnectionStatus />
-      <main className={`flex-1 ${showNav && authenticated ? "pb-[calc(4rem+env(safe-area-inset-bottom,0px))]" : ""}`}>
+      <main
+        className={`flex-1 pt-[env(safe-area-inset-top,0px)] ${showNav && authenticated ? "pb-[calc(4rem+env(safe-area-inset-bottom,0px))]" : ""}`}
+      >
         {children}
       </main>
       {showNav && <BottomNav authenticated={authenticated} />}
