@@ -30,3 +30,4 @@
   - [x] 12d. Chain the earnings screenshot into the end-of-shift flow so every `Shift` field is filled with no typing
 - [x] 13. **Deploy to Vercel** - production deploy with env config and `prisma migrate deploy`
 - [x] 14. **Email verification on registration** - credentials sign-up sends a verification link via Resend; the account can't sign in until the link is clicked. Google sign-ups are auto-verified.
+- [x] 15. **Earnings export** - a new page, linked from the trends page, where the user picks a period (a specific month, a specific year, or a custom date range) and downloads either a PDF summary (total earnings, hours, distance, trips, and earnings per hour/trip/km) or a CSV of every shift in that period including calculated fields (hours, distance)

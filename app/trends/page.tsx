@@ -7,6 +7,29 @@ import { kmToMiles, KM_PER_MILE } from "@/lib/units";
 import TrendLineChart from "@/components/trends/TrendLineChart";
 import Link from "next/link";
 
+const EXPORT_LINK = (
+  <Link
+    href="/export"
+    aria-label="Export earnings"
+    className="flex items-center justify-center w-[34px] h-[34px] flex-none rounded-[var(--radius-sm)] border border-border bg-surface text-text-secondary hover:text-foreground transition-colors"
+  >
+    <svg
+      viewBox="0 0 24 24"
+      width="17"
+      height="17"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  </Link>
+);
+
 export default async function TrendsPage({
   searchParams,
 }: {
@@ -48,9 +71,12 @@ export default async function TrendsPage({
       <div className="mx-auto w-full max-w-4xl flex-1 p-4">
         <div className="flex items-center justify-between pt-2 pb-4">
           <h1 className="text-2xl font-bold tracking-tight">Trends</h1>
-          <div className="pill-toggle">
-            <Link href="/trends?period=week" className="active">Week</Link>
-            <Link href="/trends?period=month">Month</Link>
+          <div className="flex items-center gap-2">
+            {EXPORT_LINK}
+            <div className="pill-toggle">
+              <Link href="/trends?period=week" className="active">Week</Link>
+              <Link href="/trends?period=month">Month</Link>
+            </div>
           </div>
         </div>
 
@@ -167,19 +193,22 @@ export default async function TrendsPage({
     <div className="mx-auto w-full max-w-4xl flex-1 p-4">
       <div className="flex items-center justify-between pt-2 pb-4">
         <h1 className="text-2xl font-bold tracking-tight">Trends</h1>
-        <div className="pill-toggle">
-          <Link
-            href="/trends?period=week"
-            className={period === "week" ? "active" : ""}
-          >
-            Week
-          </Link>
-          <Link
-            href="/trends?period=month"
-            className={period === "month" ? "active" : ""}
-          >
-            Month
-          </Link>
+        <div className="flex items-center gap-2">
+          {EXPORT_LINK}
+          <div className="pill-toggle">
+            <Link
+              href="/trends?period=week"
+              className={period === "week" ? "active" : ""}
+            >
+              Week
+            </Link>
+            <Link
+              href="/trends?period=month"
+              className={period === "month" ? "active" : ""}
+            >
+              Month
+            </Link>
+          </div>
         </div>
       </div>
 
