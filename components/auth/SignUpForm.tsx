@@ -8,7 +8,7 @@ const labelClasses = "mb-1.5 block text-xs font-medium text-muted";
 const inputClasses =
   "w-full rounded-sm border border-border bg-background px-3 py-2.5 text-[15px] focus:border-accent focus:ring-2 focus:ring-accent-muted focus:outline-none";
 
-const initialState = { error: undefined as string | undefined };
+const initialState = { error: undefined as string | undefined, success: undefined as boolean | undefined };
 
 export default function SignUpForm() {
   const [state, formAction, pending] = useActionState(register, initialState);
@@ -30,6 +30,17 @@ export default function SignUpForm() {
   }, []);
 
   const displayError = localError ?? state?.error;
+
+  if (state?.success) {
+    return (
+      <div className="rounded-sm border border-success-muted bg-success-muted px-4 py-6 text-center">
+        <p className="text-[15px] font-semibold text-success">Check your email</p>
+        <p className="mt-2 text-[13px] text-muted">
+          We sent a verification link to your inbox. Click the link to verify your account, then sign in.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <form action={formAction} onSubmit={handleSubmit} className="flex flex-col gap-4">

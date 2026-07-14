@@ -1,4 +1,4 @@
-# Current Feature
+# Current feature
 
-Nothing in progress. Run `/feature` to spec the next build-plan item.
+Nothing in progress. Run `/feature` or `/brief` to start the next one.
 

@@ -1,10 +1,9 @@
 "use server";
 
 import bcrypt from "bcryptjs";
-import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
-import { signIn } from "@/auth";
+import { sendVerificationEmail } from "@/actions/verify-email";
 
 export async function register(
   _prevState: { error?: string; success?: boolean },
@@ -68,10 +67,10 @@ export async function register(
   }
 
   try {
-    await signIn("credentials", { email, password, redirect: false });
+    await sendVerificationEmail(email);
   } catch {
-    return { error: "Account created but sign-in failed. Please sign in." };
+    // Resend unavailable -- user can still request a new link from the sign-in page
   }
 
-  redirect("/dashboard");
+  return { success: true };
 }

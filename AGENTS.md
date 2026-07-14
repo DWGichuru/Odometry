@@ -49,6 +49,7 @@ Required for Vercel production deployment (set in Settings > Environment Variabl
 | `STRIPE_SECRET_KEY` | Stripe secret key |
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |
 | `STRIPE_PRICE_ID` | Stripe price ID for the Pro plan |
+| `RESEND_API_KEY` | Resend API key for sending transactional emails |
 
 Third-party dashboard URLs to update with the production domain:
 

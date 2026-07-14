@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useRef, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { sendVerificationEmail } from "@/actions/verify-email";
 
 const labelClasses = "mb-1.5 block text-xs font-medium text-muted";
 const inputClasses =
@@ -12,10 +13,14 @@ export default function SignInForm({ callbackUrl }: { callbackUrl: string }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+  const [resent, setResent] = useState(false);
+  const emailRef = useRef<HTMLInputElement>(null);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+    setUnverifiedEmail(null);
     setPending(true);
 
     const form = new FormData(e.currentTarget);
@@ -31,12 +36,53 @@ export default function SignInForm({ callbackUrl }: { callbackUrl: string }) {
     setPending(false);
 
     if (result?.error) {
-      setError("Invalid email or password.");
+      if (result.error === "email_not_verified") {
+        setUnverifiedEmail(email);
+      } else {
+        setError("Invalid email or password.");
+      }
       return;
     }
 
     router.push(callbackUrl);
     router.refresh();
+  }
+
+  async function handleResend() {
+    if (!unverifiedEmail) return;
+    setResent(true);
+    await sendVerificationEmail(unverifiedEmail);
+  }
+
+  if (unverifiedEmail) {
+    return (
+      <div className="rounded-sm border border-warning-muted bg-warning-muted px-4 py-6 text-center">
+        <p className="text-[15px] font-semibold text-warning">Verify your email</p>
+        <p className="mt-2 text-[13px] text-muted">
+          You need to verify your email before signing in. Check your inbox for the verification link.
+        </p>
+        {resent ? (
+          <p className="mt-3 text-[13px] text-success">
+            Verification email resent. Check your inbox.
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={handleResend}
+            className="mt-4 w-full cursor-pointer rounded-md bg-accent py-3 font-semibold text-accent-ink transition-opacity hover:opacity-90"
+          >
+            Resend verification email
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => setUnverifiedEmail(null)}
+          className="mt-2 w-full cursor-pointer rounded-md bg-transparent py-2 text-sm text-muted hover:text-foreground"
+        >
+          Back to sign in
+        </button>
+      </div>
+    );
   }
 
   return (

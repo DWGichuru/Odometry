@@ -29,3 +29,4 @@
     - [x] 12c-3. Dashboard live banner -- in-progress banner with elapsed timer, start odometer, end button
   - [x] 12d. Chain the earnings screenshot into the end-of-shift flow so every `Shift` field is filled with no typing
 - [x] 13. **Deploy to Vercel** - production deploy with env config and `prisma migrate deploy`
+- [x] 14. **Email verification on registration** - credentials sign-up sends a verification link via Resend; the account can't sign in until the link is clicked. Google sign-ups are auto-verified.
