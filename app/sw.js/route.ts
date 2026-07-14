@@ -1,4 +1,15 @@
-const SHELL_CACHE = "odometry-shell-v1";
+import { NextResponse } from "next/server";
+
+// Served from a route instead of public/sw.js so the cache name can carry a
+// real per-deploy version: a hardcoded version string is easy to forget to
+// bump, which leaves the cache-first branch below serving whatever JS chunk
+// it first saved, forever - across every future deploy, not just this one.
+const VERSION = process.env.VERCEL_GIT_COMMIT_SHA ?? "dev";
+const IS_DEV = process.env.NODE_ENV !== "production";
+
+const SOURCE = `
+const SHELL_CACHE = "odometry-shell-${VERSION}";
+const IS_DEV = ${IS_DEV};
 
 const STATIC_PATH_PREFIXES = ["/_next/static/", "/icons/"];
 const STATIC_EXACT_PATHS = ["/manifest.webmanifest", "/favicon.ico"];
@@ -38,7 +49,10 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname.startsWith("/api/")) return;
 
   if (isStaticAsset(url.pathname)) {
-    event.respondWith(cacheFirst(request));
+    // Dev static asset URLs aren't content-hashed the same stable way a
+    // production build's are, so cache-first here would keep serving JS
+    // from a previous rebuild across dev-server restarts.
+    event.respondWith(IS_DEV ? networkFirst(request) : cacheFirst(request));
     return;
   }
 
@@ -72,4 +86,14 @@ async function networkFirst(request) {
     if (cached) return cached;
     throw new Error("offline and no cached response for " + request.url);
   }
+}
+`;
+
+export async function GET() {
+  return new NextResponse(SOURCE, {
+    headers: {
+      "Content-Type": "application/javascript; charset=utf-8",
+      "Cache-Control": "no-cache",
+    },
+  });
 }
