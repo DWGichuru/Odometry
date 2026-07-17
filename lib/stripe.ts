@@ -25,13 +25,25 @@ export async function createCheckoutSession(
     throw new Error("STRIPE_PRICE_ID is not configured");
   }
 
+  if (params.customerId) {
+    const existing = await stripe.subscriptions.list({
+      customer: params.customerId,
+      status: "all"
+    })
+    const hasLive = existing.data.some(s =>
+      ["active", "trialing", "past_due", "unpaid"].includes(s.status)
+    )
+    if (hasLive) {
+      throw new Error("Customer already has an active subscription.")
+    }
+  }
+
   return stripe.checkout.sessions.create({
     mode: "subscription",
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: `${process.env.NEXT_PUBLIC_URL ?? "http://localhost:3000"}/billing?checkout=success`,
     cancel_url: `${process.env.NEXT_PUBLIC_URL ?? "http://localhost:3000"}/billing?checkout=canceled`,
     customer: params.customerId,
-    customer_email: params.customerEmail,
     allow_promotion_codes: true,
   });
 }

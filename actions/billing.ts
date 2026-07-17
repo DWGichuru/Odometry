@@ -15,8 +15,13 @@ export async function checkoutAction(
 
   const sub = await prisma.subscription.findUnique({
     where: { userId: session.user.id },
-    select: { stripeCustomerId: true },
+    select: { stripeCustomerId: true, stripeSubscriptionId: true, status: true },
   });
+
+  const hasLiveSubscription = !!sub?.stripeSubscriptionId && sub.status !== "canceled"
+  if (hasLiveSubscription) {
+    redirect("/billing?checkout=already-subscribed")
+  }
 
   const stripeSession = await createCheckoutSession({
     customerId: sub?.stripeCustomerId ?? undefined,

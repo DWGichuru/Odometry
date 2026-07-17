@@ -54,17 +54,24 @@ export async function POST(request: NextRequest) {
         const subscriptionId = session.subscription as string;
 
         if (customerId && subscriptionId) {
-          const subscription = await stripe.subscriptions.retrieve(
-            subscriptionId,
+          const existingSubs = await stripe.subscriptions.list({
+            customer: customerId,
+            status: "all",
+          });
+          const duplicates = existingSubs.data.filter(
+            (s) =>
+              s.id !== subscriptionId &&
+              ["active", "trialing", "past_due"].includes(s.status),
           );
+          await Promise.all(duplicates.map((s) => stripe.subscriptions.cancel(s.id)));
+
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
           await prisma.subscription.updateMany({
             where: { stripeCustomerId: customerId },
             data: {
               stripeSubscriptionId: subscriptionId,
               status: mapStripeStatus(subscription.status),
-              currentPeriodEnd: toDate(
-                subscriptionPeriodEnd(subscription),
-              ),
+              currentPeriodEnd: toDate(subscriptionPeriodEnd(subscription)),
             },
           });
         }
