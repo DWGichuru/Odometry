@@ -19,7 +19,7 @@ odometer photos and no typing at all.
 - **Shift history** - list, edit, and delete past shifts
 - **Trends** - earnings per hour, per trip, and per km over time
 - **Multi-platform** - Uber, Lyft, and DoorDash shifts in one place
-- **Auth** - Google OAuth or email/password
+- **Auth** - email/password
 - **Subscription** - free for the first month, then a paid plan via Stripe
 
 ## Tech stack
@@ -29,7 +29,7 @@ odometer photos and no typing at all.
 | Framework | Next.js 16 (React 19), App Router |
 | Language | TypeScript, strict mode |
 | Database | Neon PostgreSQL + Prisma ORM |
-| Auth | NextAuth v5 (Google OAuth + email/password) |
+| Auth | NextAuth v5 (email/password) |
 | Vision extraction | OpenAI GPT-4o mini |
 | Billing | Stripe |
 | Styling | Tailwind CSS v4 |
@@ -63,8 +63,6 @@ Open [http://localhost:3000](http://localhost:3000).
 | `DATABASE_URL` | Prisma Accelerate connection string |
 | `DIRECT_URL` | Direct PostgreSQL connection (for `prisma migrate deploy`) |
 | `AUTH_SECRET` | NextAuth secret (`openssl rand -base64 32`) |
-| `AUTH_GOOGLE_ID` | Google OAuth client ID |
-| `AUTH_GOOGLE_SECRET` | Google OAuth client secret |
 | `AUTH_URL` | App URL, e.g. `http://localhost:3000` in development |
 | `OPENAI_API_KEY` | OpenAI API key (vision model for screenshot/odometer extraction) |
 | `STRIPE_SECRET_KEY` | Stripe secret key |
@@ -72,8 +70,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `STRIPE_PRICE_ID` | Stripe price ID for the paid plan |
 
 See `AGENTS.md` for the production deployment checklist, including the
-third-party dashboard URLs (Google Cloud Console, Stripe) that need updating
-per environment.
+third-party dashboard URLs (Stripe) that need updating per environment.
 
 ## Commands
 

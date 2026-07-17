@@ -42,8 +42,6 @@ Required for Vercel production deployment (set in Settings > Environment Variabl
 | `DATABASE_URL` | Prisma Accelerate connection string |
 | `DIRECT_URL` | Direct PostgreSQL connection (for `prisma migrate deploy`) |
 | `AUTH_SECRET` | NextAuth secret (`openssl rand -base64 32`) |
-| `AUTH_GOOGLE_ID` | Google OAuth client ID |
-| `AUTH_GOOGLE_SECRET` | Google OAuth client secret |
 | `AUTH_URL` | Production URL, e.g. `https://odometry.vercel.app` |
 | `OPENAI_API_KEY` | OpenAI API key (vision model for screenshot/odometer extraction) |
 | `STRIPE_SECRET_KEY` | Stripe secret key |
@@ -53,5 +51,4 @@ Required for Vercel production deployment (set in Settings > Environment Variabl
 
 Third-party dashboard URLs to update with the production domain:
 
-- Google Cloud Console: `https://<domain>/api/auth/callback/google`
 - Stripe Dashboard: `https://<domain>/api/stripe`
