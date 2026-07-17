@@ -3,6 +3,7 @@
 import { useActionState, useRef, useCallback, useState, type FormEvent } from "react";
 import { register } from "@/actions/auth";
 import Link from "next/link";
+import { COUNTRIES } from "@/lib/countries";
 
 const labelClasses = "mb-1.5 block text-xs font-medium text-muted";
 const inputClasses =
@@ -107,6 +108,20 @@ export default function SignUpForm() {
           className={inputClasses}
         />
       </div>
+
+      <div>
+        <label htmlFor="country" className={labelClasses}>Country</label>
+        <select id="country" name="country" required className={inputClasses}>
+          <option value="">Select your country</option>
+          {COUNTRIES.map((c) => (
+            <option key={c.code} value={c.code}>{c.name}</option>
+          ))}
+        </select>
+        <p className="mt-1.5 text-[12px] text-muted">
+          Sets your default currency and distance unit — you can change these later in your profile.
+        </p>
+      </div>
+
 
       {displayError && (
         <p className="rounded-sm border border-danger-muted bg-danger-muted px-3 py-2.5 text-[13px] font-medium text-danger">

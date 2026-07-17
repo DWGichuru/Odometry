@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
 import { sendVerificationEmail } from "@/actions/verify-email";
 import { alertOnFailure } from "@/lib/alert";
+import { getCountryPreset } from "@/lib/countries";
 
 export async function register(
   _prevState: { error?: string; success?: boolean },
@@ -31,6 +32,13 @@ export async function register(
     return { error: "Passwords do not match." };
   }
 
+  const countryCode = (formData.get("country") as string | null) ?? ""
+  const preset = getCountryPreset(countryCode)
+  if (!preset) {
+    return { error: "Please select a country" }
+  }
+
+
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
     return { error: "An account with this email already exists." };
@@ -54,6 +62,8 @@ export async function register(
           status: "trialing",
         },
       },
+      currency: preset.currency,
+      distanceUnit: preset.distanceUnit
     },
   });
 
