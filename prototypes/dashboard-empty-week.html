@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Odometry - dashboard, empty week</title>
+    <link rel="stylesheet" href="theme.css" />
+    <style>
+      .week {
+        margin-bottom: 14px;
+        padding: 18px;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        background: radial-gradient(
+            120% 140% at 0% 0%,
+            color-mix(in srgb, var(--accent) 16%, transparent) 0%,
+            transparent 55%
+          ),
+          var(--surface);
+        box-shadow: var(--card-shadow);
+      }
+
+      .week .amount {
+        margin-top: 10px;
+        font-size: 42px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1;
+      }
+
+      .bars {
+        display: flex;
+        align-items: flex-end;
+        gap: 7px;
+        height: 62px;
+        margin-top: 20px;
+      }
+
+      .bars i {
+        flex: 1;
+        border-radius: 3px 3px 0 0;
+        background: color-mix(in srgb, var(--accent) 65%, var(--surface));
+      }
+
+      .bars i.empty {
+        height: 4px !important;
+        border-radius: 3px;
+        background: var(--border-light);
+      }
+
+      .day-row {
+        display: flex;
+        gap: 7px;
+        margin-top: 7px;
+      }
+
+      .day-row span {
+        flex: 1;
+        text-align: center;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--faint);
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .stat {
+        padding: 13px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border);
+        background: var(--surface);
+      }
+
+      .stat .v {
+        font-size: 19px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+
+      .stat .l {
+        margin-top: 3px;
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .sec-title {
+        margin-bottom: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+
+      /* before: today's behavior - one generic card replaces the whole section */
+      .empty-swap {
+        padding: 40px 20px;
+        text-align: center;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        background: var(--surface);
+        box-shadow: var(--card-shadow);
+      }
+
+      .empty-swap .headline {
+        font-size: 17px;
+        font-weight: 600;
+        color: var(--text-secondary);
+      }
+
+      .empty-swap .sub {
+        margin-top: 8px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      .empty-swap .sub a {
+        color: var(--accent);
+        font-weight: 500;
+        text-decoration: none;
+      }
+
+      .empty-swap .sub a:hover {
+        text-decoration: underline;
+      }
+
+      /* after: fix - only the shift list collapses to a small empty message */
+      .empty-list {
+        padding: 24px 16px;
+        text-align: center;
+        border-radius: var(--radius-md);
+        border: 1px dashed var(--border);
+        background: var(--surface);
+      }
+
+      .empty-list p {
+        font-size: 13.5px;
+        color: var(--muted);
+      }
+
+      .empty-list a {
+        color: var(--accent);
+        font-weight: 500;
+        text-decoration: none;
+      }
+
+      .empty-list a:hover {
+        text-decoration: underline;
+      }
+
+      .after-only {
+        display: none;
+      }
+
+      body[data-view="after"] .before-only {
+        display: none;
+      }
+
+      body[data-view="after"] .after-only {
+        display: block;
+      }
+
+      .callout {
+        margin-bottom: 14px;
+        padding: 10px 13px;
+        border-radius: var(--radius-md);
+        border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+        background: var(--accent-muted);
+        font-size: 12px;
+        color: var(--text-secondary);
+      }
+    </style>
+  </head>
+  <body data-view="before">
+    <div class="stage">
+      <div class="stage-head">
+        <h1>Dashboard - empty week</h1>
+        <p>
+          Today, a week with no shifts swaps out the entire weekly section for
+          one generic card. The fix keeps the earnings card and stats grid
+          rendering as usual - already zero-safe - and only replaces the shift
+          list itself with a small empty message.
+        </p>
+      </div>
+
+      <div class="stage-bar">
+        <div class="seg" id="seg-view">
+          <button aria-pressed="true" onclick="setView('before')">Before (today)</button>
+          <button aria-pressed="false" onclick="setView('after')">After (the fix)</button>
+        </div>
+        <div class="seg" id="seg-theme">
+          <button aria-pressed="true" onclick="setTheme('dark')">Dark</button>
+          <button aria-pressed="false" onclick="setTheme('light')">Light</button>
+        </div>
+      </div>
+
+      <nav class="nav-links">
+        <a href="entry-sheet.html">Entry sheet</a>
+        <a href="capture.html">Camera capture</a>
+        <a href="dashboard-live.html">Dashboard (live)</a>
+        <a href="dashboard-empty-week.html" aria-current="page">Dashboard (empty week)</a>
+        <a href="end-chain.html">End-of-shift chain</a>
+      </nav>
+
+      <div class="device">
+        <div class="notch"></div>
+        <div class="screen">
+          <div class="statusbar"><span>9:03</span><span>▮▮▮ ▾ 91%</span></div>
+
+          <div class="body">
+            <div class="scroll">
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0 2px">
+                <div class="page-title">Dashboard</div>
+                <div class="pill" style="border: 1px solid var(--border); background: var(--surface-raised); color: var(--text-secondary)">
+                  ‹ Jun 22 - 28 ›
+                </div>
+              </div>
+
+              <div class="callout before-only">
+                Whole section replaced - the week's own chart and stats never
+                show, even when navigating here just to check.
+              </div>
+              <div class="callout after-only">
+                Section always renders - only "This week's shifts" changes.
+              </div>
+
+              <!-- BEFORE: current behavior, one card replaces everything -->
+              <div class="before-only">
+                <div class="empty-swap">
+                  <div class="headline">No shifts this week.</div>
+                  <div class="sub">
+                    <a href="/shifts/new">Log a shift</a> or check a different week.
+                  </div>
+                </div>
+              </div>
+
+              <!-- AFTER: the fix, weekly section always renders -->
+              <div class="after-only">
+                <section class="week">
+                  <div class="eyebrow-sm">Earned this week</div>
+                  <div class="amount tabular">$0.00</div>
+                  <div class="pill" style="margin-top: 10px; background: var(--surface-raised); color: var(--text-secondary)">
+                    0 shifts logged
+                  </div>
+
+                  <div class="bars">
+                    <i class="empty"></i>
+                    <i class="empty"></i>
+                    <i class="empty"></i>
+                    <i class="empty"></i>
+                    <i class="empty"></i>
+                    <i class="empty"></i>
+                    <i class="empty"></i>
+                  </div>
+                  <div class="day-row">
+                    <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span>
+                    <span>S</span><span>S</span>
+                  </div>
+                  <!-- platform split bar intentionally omitted: gated on totalEarnings > 0 -->
+                </section>
+
+                <div class="stats">
+                  <div class="stat">
+                    <div class="v tabular">$0.00</div>
+                    <div class="l">Avg per hour</div>
+                  </div>
+                  <div class="stat">
+                    <div class="v tabular">$0.00</div>
+                    <div class="l">Avg per trip</div>
+                  </div>
+                  <div class="stat">
+                    <div class="v tabular">$0.00</div>
+                    <div class="l">Avg per km</div>
+                  </div>
+                </div>
+
+                <div class="sec-title">This week's shifts</div>
+
+                <div class="empty-list">
+                  <p>
+                    No shifts this week.
+                    <a href="/shifts/new">Log a shift</a>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <nav class="bottom-nav">
+            <a href="#" class="active"><span>⌂</span>Dashboard</a>
+            <a href="#"><span>☰</span>Shifts</a>
+            <a href="#"><span>📈</span>Trends</a>
+            <a href="#"><span>👤</span>Profile</a>
+            <div class="fab-slot">
+              <button class="fab"><span>+</span></button>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function setView(v) {
+        document.body.dataset.view = v;
+        document
+          .getElementById("seg-view")
+          .querySelectorAll("button")
+          .forEach((b, i) => b.setAttribute("aria-pressed", i === (v === "before" ? 0 : 1)));
+      }
+
+      function setTheme(t) {
+        document.documentElement.dataset.theme = t;
+        document
+          .getElementById("seg-theme")
+          .querySelectorAll("button")
+          .forEach((b, i) => b.setAttribute("aria-pressed", i === (t === "dark" ? 0 : 1)));
+      }
+    </script>
+  </body>
+</html>

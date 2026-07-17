@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { sendVerificationEmail } from "@/actions/verify-email";
+import { sendVerificationEmail, type SendVerificationResult } from "@/actions/verify-email";
 
 const labelClasses = "mb-1.5 block text-xs font-medium text-muted";
 const inputClasses =
@@ -14,8 +14,7 @@ export default function SignInForm({ callbackUrl }: { callbackUrl: string }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
-  const [resent, setResent] = useState(false);
-  const emailRef = useRef<HTMLInputElement>(null);
+  const [resendResult, setResendResult] = useState<SendVerificationResult | null>(null)
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -50,8 +49,8 @@ export default function SignInForm({ callbackUrl }: { callbackUrl: string }) {
 
   async function handleResend() {
     if (!unverifiedEmail) return;
-    setResent(true);
-    await sendVerificationEmail(unverifiedEmail);
+    const result = await sendVerificationEmail(unverifiedEmail);
+    setResendResult(result)
   }
 
   if (unverifiedEmail) {
@@ -61,9 +60,15 @@ export default function SignInForm({ callbackUrl }: { callbackUrl: string }) {
         <p className="mt-2 text-[13px] text-muted">
           You need to verify your email before signing in. Check your inbox for the verification link.
         </p>
-        {resent ? (
+        {resendResult ? (
           <p className="mt-3 text-[13px] text-success">
-            Verification email resent. Check your inbox.
+            {resendResult === "sent" && "Verification email resent. Check your inbox."}
+            {resendResult === "skipped-cooldown" &&
+              "You already requested one recently — check your inbox, or try again in a minute."}
+            {resendResult === "skipped-verification" &&
+              "That email is already verified. Try signing in again."}
+            {resendResult === "failed" &&
+              "We couldn't send that email right now. Please try again shortly."}
           </p>
         ) : (
           <button

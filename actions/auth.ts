@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
 import { sendVerificationEmail } from "@/actions/verify-email";
+import { alertOnFailure } from "@/lib/alert";
 
 export async function register(
   _prevState: { error?: string; success?: boolean },
@@ -62,14 +63,16 @@ export async function register(
       where: { userId: user.id },
       data: { stripeCustomerId: customer.id },
     });
-  } catch {
+  } catch (err) {
     // Stripe unavailable -- user can still use the trial
+    await alertOnFailure("User registration on stripe failed", err)
   }
 
   try {
     await sendVerificationEmail(email);
-  } catch {
+  } catch (err) {
     // Resend unavailable -- user can still request a new link from the sign-in page
+    await alertOnFailure("Failed to send verification email", err)
   }
 
   return { success: true };

@@ -3,14 +3,18 @@
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendVerificationEmail as sendEmail } from "@/lib/resend";
+import { alertOnFailure } from "@/lib/alert";
+
 
 const TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 const RESEND_COOLDOWN_MS = 60 * 1000;
 
-export async function sendVerificationEmail(email: string) {
+export type SendVerificationResult = | "sent" | "skipped-cooldown" | "skipped-verification" | "failed"
+
+export async function sendVerificationEmail(email: string): Promise<SendVerificationResult> {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user || user.emailVerified) {
-    return;
+    return "skipped-verification";
   }
 
   const existing = await prisma.verificationToken.findFirst({
@@ -19,7 +23,7 @@ export async function sendVerificationEmail(email: string) {
   if (existing) {
     const issuedAt = existing.expires.getTime() - TOKEN_TTL_MS;
     if (Date.now() - issuedAt < RESEND_COOLDOWN_MS) {
-      return;
+      return "skipped-cooldown";
     }
   }
 
@@ -38,7 +42,14 @@ export async function sendVerificationEmail(email: string) {
     },
   });
 
-  await sendEmail(email, token);
+  try {
+    await sendEmail(email, token);
+  } catch (err) {
+    alertOnFailure("Failed sending user email", err)
+    return "failed"
+  }
+
+  return "sent"
 }
 
 export async function confirmEmailVerification(
