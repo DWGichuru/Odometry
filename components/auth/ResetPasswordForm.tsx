@@ -3,6 +3,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { confirmPasswordReset } from "@/actions/password-reset";
+import PasswordInput from "@/components/auth/PasswordInput";
 
 const labelClasses = "mb-1.5 block text-xs font-medium text-muted";
 const inputClasses =
@@ -64,11 +65,10 @@ export default function ResetPasswordForm({ token }: { token: string }) {
         <label htmlFor="password" className={labelClasses}>
           New password
         </label>
-        <input
+        <PasswordInput
           ref={passwordRef}
           id="password"
           name="password"
-          type="password"
           autoComplete="new-password"
           required
           minLength={8}
@@ -81,11 +81,10 @@ export default function ResetPasswordForm({ token }: { token: string }) {
         <label htmlFor="confirm" className={labelClasses}>
           Confirm new password
         </label>
-        <input
+        <PasswordInput
           ref={confirmRef}
           id="confirm"
           name="confirm"
-          type="password"
           autoComplete="new-password"
           required
           minLength={8}

@@ -4,6 +4,7 @@ import { useActionState, useRef, useCallback, useState, type FormEvent } from "r
 import { register } from "@/actions/auth";
 import Link from "next/link";
 import { COUNTRIES } from "@/lib/countries";
+import PasswordInput from "@/components/auth/PasswordInput";
 
 const labelClasses = "mb-1.5 block text-xs font-medium text-muted";
 const inputClasses =
@@ -79,11 +80,10 @@ export default function SignUpForm() {
         <label htmlFor="password" className={labelClasses}>
           Password
         </label>
-        <input
+        <PasswordInput
           ref={passwordRef}
           id="password"
           name="password"
-          type="password"
           autoComplete="new-password"
           required
           minLength={8}
@@ -96,11 +96,10 @@ export default function SignUpForm() {
         <label htmlFor="confirm" className={labelClasses}>
           Confirm password
         </label>
-        <input
+        <PasswordInput
           ref={confirmRef}
           id="confirm"
           name="confirm"
-          type="password"
           autoComplete="new-password"
           required
           minLength={8}

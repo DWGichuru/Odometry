@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { sendVerificationEmail, type SendVerificationResult } from "@/actions/verify-email";
+import PasswordInput from "@/components/auth/PasswordInput";
 
 const labelClasses = "mb-1.5 block text-xs font-medium text-muted";
 const inputClasses =
@@ -117,10 +118,9 @@ export default function SignInForm({ callbackUrl }: { callbackUrl: string }) {
             Forgot password?
           </Link>
         </div>
-        <input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           autoComplete="current-password"
           required
           placeholder="Your password"
