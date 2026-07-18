@@ -37,7 +37,7 @@ export default function SignInForm({ callbackUrl }: { callbackUrl: string }) {
     setPending(false);
 
     if (result?.error) {
-      if (result.error === "email_not_verified") {
+      if (result.code === "email_not_verified") {
         setUnverifiedEmail(email);
       } else {
         setError("Invalid email or password.");
