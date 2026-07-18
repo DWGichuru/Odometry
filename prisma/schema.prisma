@@ -54,6 +54,7 @@ model User {
   shiftSessions ShiftSession[]
   accounts     Account[]
   sessions     Session[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Credential {
@@ -148,4 +149,14 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

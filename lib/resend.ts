@@ -31,3 +31,26 @@ export async function sendVerificationEmail(email: string, token: string) {
 
   return data
 }
+
+export async function sendPasswordResetEmail(email: string, token: string) {
+  const baseUrl = process.env.NEXT_PUBLIC_URL
+  if (!baseUrl) {
+    throw new Error(`Email server not setup correctly`)
+  }
+
+  const resetUrl = `${baseUrl}/reset-password?token=${encodeURIComponent(token)}`;
+
+  const resend = getResend();
+  const { data, error } = await resend.emails.send({
+    from: "notification@noreply.odometry.app",
+    to: email,
+    subject: "Reset your password",
+    html: `<p>Click the link below to set a new password:</p><p><a href="${resetUrl}">${resetUrl}</a></p><p>If you didn't request this, you can ignore this email.</p>`,
+  });
+
+  if (error) {
+    throw new Error(`Failed to send password reset email: ${error.message}`)
+  }
+
+  return data
+}
