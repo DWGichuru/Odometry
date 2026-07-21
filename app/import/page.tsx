@@ -222,7 +222,7 @@ export default function ImportPage() {
               type="submit"
               disabled={!file}
               onClick={handleExtract}
-              className="mt-1 w-full cursor-pointer rounded-md bg-accent py-3 text-[14px] font-semibold text-accent-ink transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-55"
+              className="mt-1 w-full cursor-pointer rounded-md bg-accent py-3 font-semibold text-accent-ink transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
               Import shift data
             </button>
@@ -259,7 +259,7 @@ export default function ImportPage() {
                     setStep("input");
                     setExtractError(false);
                   }}
-                  className="cursor-pointer rounded-md bg-accent px-4 py-2 text-[14px] font-semibold text-accent-ink transition-opacity hover:opacity-90"
+                  className="mt-1 w-full cursor-pointer rounded-md bg-accent py-3 font-semibold text-accent-ink transition-opacity hover:opacity-90"
                 >
                   Try again
                 </button>
@@ -467,13 +467,13 @@ export default function ImportPage() {
               <button
                 type="button"
                 onClick={() => setStep("input")}
-                className="flex flex-1 cursor-pointer items-center justify-center rounded-md bg-surface-raised py-3 text-[14px] font-semibold text-text-secondary transition-opacity hover:opacity-85"
+                className="flex flex-1 cursor-pointer items-center justify-center rounded-md bg-surface-raised py-3 font-semibold text-text-secondary transition-opacity hover:opacity-85"
               >
                 Back
               </button>
               <button
                 type="submit"
-                className="flex flex-[2] cursor-pointer items-center justify-center rounded-md bg-accent py-3 text-[14px] font-semibold text-accent-ink transition-opacity hover:opacity-90"
+                className="flex flex-[2] cursor-pointer items-center justify-center rounded-md bg-accent py-3 font-semibold text-accent-ink transition-opacity hover:opacity-90"
               >
                 Save shift
               </button>
