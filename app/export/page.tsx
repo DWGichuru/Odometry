@@ -145,14 +145,14 @@ export default async function ExportPage({
             <>
               <Link
                 href={`/api/export/pdf?${queryString}`}
-                className="btn btn-accent"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-accent py-3 font-semibold text-accent-ink transition-opacity hover:opacity-90"
               >
                 {DOWNLOAD_ICON}
                 Download PDF summary
               </Link>
               <Link
                 href={`/api/export/csv?${queryString}`}
-                className="btn btn-quiet"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-surface-raised py-3 font-semibold text-text-secondary transition-opacity hover:opacity-85"
               >
                 {DOWNLOAD_ICON}
                 Download CSV ({summary.shiftCount} row
@@ -161,11 +161,11 @@ export default async function ExportPage({
             </>
           ) : (
             <>
-              <span className="btn btn-accent opacity-45 cursor-not-allowed">
+              <span className="inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-md bg-accent py-3 font-semibold text-accent-ink opacity-45">
                 {DOWNLOAD_ICON}
                 Download PDF summary
               </span>
-              <span className="btn btn-quiet opacity-45 cursor-not-allowed">
+              <span className="inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-md bg-surface-raised py-3 font-semibold text-text-secondary opacity-45">
                 {DOWNLOAD_ICON}
                 Download CSV
               </span>
