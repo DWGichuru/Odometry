@@ -217,7 +217,7 @@ body {
   transition: opacity 0.15s, border-color 0.15s;
 }
 
-.chip[aria-pressed="false"] {
+.chip[aria-checked="false"] {
   opacity: 0.42;
 }
 
@@ -262,11 +262,6 @@ body {
 
 .series-area {
   transition: opacity 0.2s;
-}
-
-.series-off {
-  opacity: 0;
-  pointer-events: none;
 }
 
 .dot-marker {

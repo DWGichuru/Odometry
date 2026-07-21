@@ -48,7 +48,7 @@ function formatMonthLong(date: Date): string {
 }
 
 function formatWeekLabel(d: Date): string {
-  return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 }
 
 function formatWeekTip(d: Date): string {
@@ -161,4 +161,12 @@ export function formatTrendTotal(unit: string | undefined, value: number): strin
 
 export function formatTrendRate(value: number): string {
   return `$${value.toFixed(2)}`;
+}
+
+export function formatAxisTick(unit: string | undefined, value: number, maxValue: number): string {
+  const decimals = maxValue < 10 ? 1 : 0;
+  const rounded = Number(value.toFixed(decimals));
+  const suffix = unit && !CURRENCY_PREFIX_SYMBOLS.has(unit) ? ` ${unit}` : "";
+  const prefix = unit && CURRENCY_PREFIX_SYMBOLS.has(unit) ? unit : "";
+  return `${prefix}${rounded.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}${suffix}`;
 }

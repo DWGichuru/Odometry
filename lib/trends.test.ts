@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { aggregateTrends, formatTrendTotal, formatTrendRate } from "./trends";
+import { aggregateTrends, formatTrendTotal, formatTrendRate, formatAxisTick } from "./trends";
 
 function shift(date: string, hours: number, earned: number, trips: number, km: number) {
   const start = new Date(`${date}T08:00:00Z`);
@@ -100,6 +100,12 @@ describe("aggregateTrends", () => {
     expect(result[1].period > result[0].period).toBe(true);
   });
 
+  it("formats the weekly period label as a full month/day", () => {
+    const s = shift("2025-02-19", 4, 80, 5, 40);
+    const result = aggregateTrends([s], "week");
+    expect(result[0].periodLabel).toBe("Feb 17");
+  });
+
   it("sorts periods oldest first", () => {
     const a = shift("2025-07-01", 4, 80, 5, 40);
     const b = shift("2025-06-01", 4, 80, 5, 40);
@@ -136,5 +142,22 @@ describe("formatTrendRate", () => {
     expect(formatTrendRate(19.726)).toBe("$19.73");
     expect(formatTrendRate(0)).toBe("$0.00");
     expect(formatTrendRate(1.1)).toBe("$1.10");
+  });
+});
+
+describe("formatAxisTick", () => {
+  it("rounds to whole numbers when the series max is 10 or more", () => {
+    expect(formatAxisTick("$", 23.33, 43)).toBe("$23");
+    expect(formatAxisTick("$", 0, 43)).toBe("$0");
+    expect(formatAxisTick("h", 5.6, 20)).toBe("6 h");
+    expect(formatAxisTick("km", 310.4, 400)).toBe("310 km");
+    expect(formatAxisTick("", 41.5, 50)).toBe("42");
+    expect(formatAxisTick(undefined, 3.2, 20)).toBe("3");
+  });
+
+  it("keeps one decimal when the series max is under 10, to avoid duplicate-looking ticks", () => {
+    expect(formatAxisTick("$", 2.5, 2.55)).toBe("$2.5");
+    expect(formatAxisTick("$", 1.275, 2.55)).toBe("$1.3");
+    expect(formatAxisTick("$", 0, 2.55)).toBe("$0.0");
   });
 });

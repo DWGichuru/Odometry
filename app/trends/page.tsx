@@ -103,21 +103,13 @@ export default async function TrendsPage({
   const labels = points.map((p) => p.periodLabel);
   const tipLabels = points.map((p) => p.tipLabel);
 
-  const maxRate = Math.max(
-    ...points.map((p) =>
-      Math.max(p.earningsPerHour, p.earningsPerTrip, p.earningsPerKm * distanceMultiplier),
-    ),
-    0,
-  );
-  const sharedMax = Math.ceil(maxRate / 2) * 2 + 2;
-
   const ratesSeries = [
     {
       key: "hour",
       name: "Per hour",
       color: "var(--chart-earnings)",
       unit: moneyUnit,
-      on: true,
+      defaultSelected: true,
       end: true,
       data: points.map((p) => p.earningsPerHour),
     },
@@ -126,7 +118,6 @@ export default async function TrendsPage({
       name: "Per trip",
       color: "var(--chart-hours)",
       unit: moneyUnit,
-      on: true,
       end: true,
       data: points.map((p) => p.earningsPerTrip),
     },
@@ -135,7 +126,6 @@ export default async function TrendsPage({
       name: `Per ${distanceLabel}`,
       color: "var(--chart-trips)",
       unit: moneyUnit,
-      on: true,
       end: true,
       data: points.map((p) => p.earningsPerKm * distanceMultiplier),
     },
@@ -148,7 +138,7 @@ export default async function TrendsPage({
       color: "var(--chart-earnings)",
       unit: moneyUnit,
       area: true,
-      on: true,
+      defaultSelected: true,
       end: true,
       data: points.map((p) => p.totalEarnings),
     },
@@ -158,7 +148,6 @@ export default async function TrendsPage({
       color: "var(--chart-hours)",
       unit: "h",
       area: false,
-      on: true,
       end: false,
       data: points.map((p) => p.totalHours),
     },
@@ -168,7 +157,6 @@ export default async function TrendsPage({
       color: "var(--chart-trips)",
       unit: "",
       area: false,
-      on: false,
       end: false,
       data: points.map((p) => p.totalTrips),
     },
@@ -178,7 +166,6 @@ export default async function TrendsPage({
       color: "var(--chart-km)",
       unit: distanceLabel,
       area: false,
-      on: false,
       end: false,
       data: points.map((p) =>
         distanceUnit === "MI" ? kmToMiles(p.totalDistanceKm) : p.totalDistanceKm,
@@ -218,14 +205,13 @@ export default async function TrendsPage({
           <span className="text-xs font-medium text-muted">Per hour, trip &amp; {distanceLabel}</span>
         </div>
         <p className="text-xs text-muted mb-2">
-          Tap a rate to hide it &middot; drag across the chart for any {hintPeriod}.
+          Tap a rate to view it &middot; drag across the chart for any {hintPeriod}.
         </p>
         <TrendLineChart
           key={period}
           labels={labels}
           tipLabels={tipLabels}
           series={ratesSeries}
-          sharedMax={sharedMax}
         />
       </section>
 
@@ -237,7 +223,7 @@ export default async function TrendsPage({
           </span>
         </div>
         <p className="text-xs text-muted mb-2">
-          Tap a series to hide it &middot; drag across the chart for any {hintPeriod}.
+          Tap a series to view it &middot; drag across the chart for any {hintPeriod}.
         </p>
         <TrendLineChart
           key={period}
