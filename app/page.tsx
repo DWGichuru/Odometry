@@ -1,5 +1,6 @@
 import PhoneFrame from "@/components/landing/PhoneFrame";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function LandingPage() {
   return (
@@ -7,7 +8,10 @@ export default function LandingPage() {
       <header className="nav-bar">
         <div className="wrap">
           <Link href="/" className="brand">
-            <span className="mark">&#x25D0;</span> Odometry
+            <span className="mark">
+              <Image src="/icons/icon-192x192.png" alt="" width={30} height={30} />
+            </span>
+            Odometry
           </Link>
           <div className="nav-actions">
             <Link href="/sign-in" className="btn-primary" style={{ height: 40 }}>
@@ -69,13 +73,23 @@ export default function LandingPage() {
         <div className="wrap-block">
           <div className="section-head center">
             <span className="eyebrow">Log a shift in seconds</span>
-            <h2>Two ways to log. Zero spreadsheets.</h2>
-            <p>Snap the end-of-shift screenshot and let AI read it, or tap the numbers in by hand. Either way you are done before you pull off.</p>
+            <h2>Three ways to log. Zero spreadsheets.</h2>
+            <p>Photograph the odometer and never type a thing, snap the end-of-shift screenshot and let AI read it, or tap the numbers in by hand.</p>
           </div>
 
-          <div className="duo">
+          <div className="trio">
+            <div className="way headline">
+              <span className="tag live">Headline feature</span>
+              <h3>Live, hands-free</h3>
+              <p>Photograph the odometer to start a shift. Photograph it again to end one. No typing, no timer to remember &mdash; the app timestamps everything for you.</p>
+              <PhoneFrame
+                src="/screens/capture.png"
+                alt="Live odometer capture screen"
+              />
+            </div>
+
             <div className="way">
-              <span className="tag">Headline feature</span>
+              <span className="tag">Or from a screenshot</span>
               <h3>From a screenshot</h3>
               <p>Upload your earnings summary. GPT-4o mini extracts earnings, trips, distance, and the end odometer for you to review.</p>
               <PhoneFrame
@@ -189,6 +203,51 @@ export default function LandingPage() {
 
       <section className="section-block">
         <div className="wrap-block">
+          <div className="split">
+            <PhoneFrame
+              src="/screens/export.png"
+              alt="Export screen with a period picker, totals, and PDF/CSV downloads"
+            />
+            <div>
+              <span className="eyebrow">Tax season, sorted</span>
+              <h2 style={{ fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: 800, letterSpacing: "-0.02em", margin: "12px 0 10px" }}>
+                Every shift, ready for your accountant.
+              </h2>
+              <p style={{ color: "var(--text-secondary)", fontSize: 17 }}>
+                Pick a month, a year, or a custom range and get a clean record of
+                everything you drove and earned &mdash; no more digging through
+                three apps at tax time.
+              </p>
+              <ul className="feature-list">
+                <li>
+                  <span className="ic" style={{ color: "var(--accent)" }}>&#9679;</span>
+                  <div>
+                    <h4>PDF summary or CSV</h4>
+                    <p>A one-page totals sheet, or a row-by-row CSV for your spreadsheet.</p>
+                  </div>
+                </li>
+                <li>
+                  <span className="ic" style={{ color: "var(--success)" }}>&#9679;</span>
+                  <div>
+                    <h4>Any period you need</h4>
+                    <p>Month, calendar year, or a custom date range.</p>
+                  </div>
+                </li>
+                <li>
+                  <span className="ic" style={{ color: "var(--warning)" }}>&#9679;</span>
+                  <div>
+                    <h4>Every shift, every source</h4>
+                    <p>Manual, screenshot, and odometer-captured shifts all included.</p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section-block">
+        <div className="wrap-block">
           <div className="section-head center">
             <span className="eyebrow">Pricing</span>
             <h2>One plan. Fair price.</h2>
@@ -247,7 +306,10 @@ export default function LandingPage() {
       <footer style={{ borderTop: "1px solid var(--border)", padding: "28px 0" }}>
         <div className="wrap-block" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13, color: "var(--muted)", flexWrap: "wrap", gap: 12 }}>
           <span className="brand" style={{ fontSize: 14 }}>
-            <span className="mark" style={{ width: 24, height: 24, fontSize: 12 }}>&#x25D0;</span> Odometry
+            <span className="mark" style={{ width: 24, height: 24 }}>
+              <Image src="/icons/icon-192x192.png" alt="" width={24} height={24} />
+            </span>
+            Odometry
           </span>
           <nav>
             <Link href="#" style={{ color: "var(--text-secondary)", marginLeft: 18 }}>Privacy</Link>
