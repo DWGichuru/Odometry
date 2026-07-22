@@ -12,8 +12,7 @@ export function getStripe(): Stripe {
 }
 
 interface CreateCheckoutSessionParams {
-  customerId?: string;
-  customerEmail?: string;
+  customerId: string;
 }
 
 export async function createCheckoutSession(
@@ -25,17 +24,15 @@ export async function createCheckoutSession(
     throw new Error("STRIPE_PRICE_ID is not configured");
   }
 
-  if (params.customerId) {
-    const existing = await stripe.subscriptions.list({
-      customer: params.customerId,
-      status: "all"
-    })
-    const hasLive = existing.data.some(s =>
-      ["active", "trialing", "past_due", "unpaid"].includes(s.status)
-    )
-    if (hasLive) {
-      throw new Error("Customer already has an active subscription.")
-    }
+  const existing = await stripe.subscriptions.list({
+    customer: params.customerId,
+    status: "all"
+  })
+  const hasLive = existing.data.some(s =>
+    ["active", "trialing", "past_due", "unpaid"].includes(s.status)
+  )
+  if (hasLive) {
+    throw new Error("Customer already has an active subscription.")
   }
 
   return stripe.checkout.sessions.create({
@@ -46,6 +43,24 @@ export async function createCheckoutSession(
     customer: params.customerId,
     allow_promotion_codes: true,
   });
+}
+
+export async function customerExists(customerId: string): Promise<boolean> {
+  const stripe = getStripe();
+  try {
+    const customer = await stripe.customers.retrieve(customerId);
+    return !customer.deleted;
+  } catch (err) {
+    if (err instanceof Stripe.errors.StripeError && err.code === "resource_missing") {
+      return false;
+    }
+    throw err;
+  }
+}
+
+export async function createCustomer(params: { email?: string; name?: string }) {
+  const stripe = getStripe();
+  return stripe.customers.create({ email: params.email, name: params.name });
 }
 
 export async function createPortalSession(customerId: string) {

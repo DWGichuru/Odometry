@@ -2,7 +2,12 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { createCheckoutSession, createPortalSession } from "@/lib/stripe";
+import {
+  createCheckoutSession,
+  createCustomer,
+  createPortalSession,
+  customerExists,
+} from "@/lib/stripe";
 import { redirect } from "next/navigation";
 import { alertOnFailure } from "@/lib/alert";
 
@@ -26,10 +31,24 @@ export async function checkoutAction(
 
   let checkoutUrl: string | null;
   try {
-    const stripeSession = await createCheckoutSession({
-      customerId: sub?.stripeCustomerId ?? undefined,
-      customerEmail: session.user.email ?? undefined,
-    });
+    let customerId = sub?.stripeCustomerId ?? undefined;
+    if (customerId && !(await customerExists(customerId))) {
+      customerId = undefined;
+    }
+
+    if (!customerId) {
+      const customer = await createCustomer({
+        email: session.user.email ?? undefined,
+        name: session.user.name ?? undefined,
+      });
+      customerId = customer.id;
+      await prisma.subscription.update({
+        where: { userId: session.user.id },
+        data: { stripeCustomerId: customerId },
+      });
+    }
+
+    const stripeSession = await createCheckoutSession({ customerId });
     checkoutUrl = stripeSession.url;
   } catch (err) {
     await alertOnFailure("Stripe checkout session creation failed", err);
