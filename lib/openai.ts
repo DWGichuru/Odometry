@@ -89,3 +89,79 @@ export async function callOpenAIVision(
 export async function callOpenAIOdometerVision(imageBase64: string): Promise<string> {
   return callOpenAIVision(imageBase64, ODOMETER_EXTRACTION_PROMPT);
 }
+
+interface InsightShiftInput {
+  date: string;
+  weekday: string;
+  startTime: string;
+  endTime: string;
+  durationHours: number;
+  amountEarned: number;
+  tripsCompleted: number;
+  distanceKm: number;
+  platform: string;
+}
+
+export function buildInsightsPrompt(shifts: InsightShiftInput[]): string {
+  const rows = shifts
+    .map(
+      (s) =>
+        `${s.date} | ${s.weekday} | ${s.startTime}-${s.endTime} | ${s.durationHours.toFixed(2)}h | $${s.amountEarned.toFixed(2)} | ${s.tripsCompleted} trips | ${s.distanceKm.toFixed(1)}km | ${s.platform}`,
+    )
+    .join("\n");
+
+  return `You are analyzing a gig driver's shift history to help them earn more. Here is every shift, one per line, as "date | weekday | start-end | duration | earnings | trips | distance | platform":
+
+${rows}
+
+Return ONLY a valid JSON object, no other text, no markdown, no explanation:
+
+{
+  "bestTimes": string,
+  "idealShiftLength": string,
+  "notWorking": string
+}
+
+- "bestTimes": which days and times of day earn the most per hour for this driver. If earnings per hour show a clear upward or downward trend across the history, mention that trend here too.
+- "idealShiftLength": the shift duration that tends to earn the best per hour for this driver.
+- "notWorking": patterns that are costing this driver money - for example a weekday or time slot that consistently underperforms, or (when the driver uses more than one platform) a platform that earns meaningfully less per hour or per trip than another.
+
+Each field must be 1-3 sentences of plain, specific, encouraging advice grounded only in the data above. Do not invent numbers not supported by the data.`;
+}
+
+export async function callOpenAIChat(prompt: string): Promise<string> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY is not configured");
+  }
+
+  const response = await fetch(OPENAI_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 500,
+      temperature: 0.3,
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`OpenAI API error ${response.status}: ${body}`);
+  }
+
+  const data = (await response.json()) as {
+    choices: { message: { content: string } }[];
+  };
+
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) {
+    throw new Error("OpenAI returned an empty response");
+  }
+
+  return content;
+}
