@@ -4,6 +4,7 @@ const { mockPrisma, mockCallOpenAIChat } = vi.hoisted(() => ({
   mockPrisma: {
     subscription: { findUnique: vi.fn() },
     shift: { findMany: vi.fn() },
+    user: { findUnique: vi.fn() },
     insight: { count: vi.fn(), create: vi.fn(), findFirst: vi.fn() },
   },
   mockCallOpenAIChat: vi.fn(),

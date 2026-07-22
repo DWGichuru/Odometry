@@ -79,10 +79,16 @@ export async function generateTrendInsights(): Promise<
     };
   }
 
-  const shifts = await prisma.shift.findMany({
-    where: { userId },
-    orderBy: { date: "asc" },
-  });
+  const [shifts, user] = await Promise.all([
+    prisma.shift.findMany({
+      where: { userId },
+      orderBy: { date: "asc" },
+    }),
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true },
+    }),
+  ]);
 
   if (shifts.length < MIN_SHIFTS) {
     return { error: "Log a few more shifts before requesting insights." };
@@ -100,6 +106,7 @@ export async function generateTrendInsights(): Promise<
       distanceKm: s.endOdometer - s.startOdometer,
       platform: s.platform,
     })),
+    user?.name ?? undefined,
   );
 
   let rawResponse: string;

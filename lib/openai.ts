@@ -102,7 +102,10 @@ interface InsightShiftInput {
   platform: string;
 }
 
-export function buildInsightsPrompt(shifts: InsightShiftInput[]): string {
+export function buildInsightsPrompt(
+  shifts: InsightShiftInput[],
+  driverName?: string,
+): string {
   const rows = shifts
     .map(
       (s) =>
@@ -110,7 +113,11 @@ export function buildInsightsPrompt(shifts: InsightShiftInput[]): string {
     )
     .join("\n");
 
-  return `You are analyzing a gig driver's shift history to help them earn more. Here is every shift, one per line, as "date | weekday | start-end | duration | earnings | trips | distance | platform":
+  const addressing = driverName
+    ? `You're a coach talking directly to a gig driver named ${driverName}. Address them by name at least once.`
+    : "You're a coach talking directly to a gig driver.";
+
+  return `${addressing} Write to them in second person ("you"/"your"), in a warm, conversational tone, like a coach giving advice, not an analyst writing a report. Be honest and critical, not just encouraging: call out what's underperforming as directly as what's going well, so they get maximum value out of their own history instead of a pep talk. Here is every shift from their history, one per line, as "date | weekday | start-end | duration | earnings | trips | distance | platform":
 
 ${rows}
 
@@ -122,11 +129,11 @@ Return ONLY a valid JSON object, no other text, no markdown, no explanation:
   "notWorking": string
 }
 
-- "bestTimes": which days and times of day earn the most per hour for this driver. If earnings per hour show a clear upward or downward trend across the history, mention that trend here too.
-- "idealShiftLength": the shift duration that tends to earn the best per hour for this driver.
-- "notWorking": patterns that are costing this driver money - for example a weekday or time slot that consistently underperforms, or (when the driver uses more than one platform) a platform that earns meaningfully less per hour or per trip than another.
+- "bestTimes": which days and times of day earn them the most per hour. If earnings per hour show a clear upward or downward trend across the history, mention that trend here too.
+- "idealShiftLength": the shift duration that tends to earn them the best per hour.
+- "notWorking": patterns that are costing them money - for example a weekday or time slot that consistently underperforms, or (when they use more than one platform) a platform that earns meaningfully less per hour or per trip than another. Be specific and direct about what to stop or change, not just what to keep doing.
 
-Each field must be 1-3 sentences of plain, specific, encouraging advice grounded only in the data above. Do not invent numbers not supported by the data.`;
+Each field must be 1-3 sentences of plain, specific advice grounded only in the data above, written directly to them - honest and critical where the data calls for it, encouraging where it's earned. Do not invent numbers not supported by the data.`;
 }
 
 export async function callOpenAIChat(prompt: string): Promise<string> {
@@ -145,7 +152,7 @@ export async function callOpenAIChat(prompt: string): Promise<string> {
       model: MODEL,
       messages: [{ role: "user", content: prompt }],
       max_tokens: 500,
-      temperature: 0.3,
+      temperature: 0.65,
     }),
   });
 
