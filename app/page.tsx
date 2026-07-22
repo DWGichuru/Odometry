@@ -42,7 +42,7 @@ export default function LandingPage() {
               </span>
             </h1>
             <p className="sub" style={{ fontSize: 18, color: "var(--text-secondary)", maxWidth: "30em", marginBottom: 28 }}>
-              Log each shift by hand or from a screenshot, and see your hours,
+              Log each shift by hand or use our automated image system, and see your hours,
               earnings, trips, and distance combined across every platform.
             </p>
             <div className="cta-row">
@@ -74,7 +74,7 @@ export default function LandingPage() {
           <div className="section-head center">
             <span className="eyebrow">Log a shift in seconds</span>
             <h2>Three ways to log. Zero spreadsheets.</h2>
-            <p>Photograph the odometer and never type a thing, snap the end-of-shift screenshot and let AI read it, or tap the numbers in by hand.</p>
+            <p>Photograph the odometer and never type a thing, snap the end-of-shift screenshot and let our image systems read it, or tap the numbers in by hand.</p>
           </div>
 
           <div className="trio">
@@ -91,7 +91,7 @@ export default function LandingPage() {
             <div className="way">
               <span className="tag">Or from a screenshot</span>
               <h3>From a screenshot</h3>
-              <p>Upload your earnings summary. GPT-4o mini extracts earnings, trips, distance, and the end odometer for you to review.</p>
+              <p>Upload your earnings summary. Our image systems extracts earnings, trips, distance, and the end odometer for you to review.</p>
               <PhoneFrame
                 src="/screens/import.png"
                 alt="Screenshot import screen"
