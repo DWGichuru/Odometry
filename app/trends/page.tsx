@@ -5,6 +5,8 @@ import { aggregateTrends } from "@/lib/trends";
 import { currencySymbol } from "@/lib/currency";
 import { kmToMiles, KM_PER_MILE } from "@/lib/units";
 import TrendLineChart from "@/components/trends/TrendLineChart";
+import TrendInsights from "@/components/trends/TrendInsights";
+import { getInsightsStatus } from "@/actions/insights";
 import Link from "next/link";
 
 const EXPORT_LINK = (
@@ -51,10 +53,18 @@ export default async function TrendsPage({
   const distanceLabel = distanceUnit === "MI" ? "mi" : "km";
   const distanceMultiplier = distanceUnit === "MI" ? KM_PER_MILE : 1;
 
-  const dbShifts = await prisma.shift.findMany({
-    where: { userId: session.user.id },
-    orderBy: { date: "asc" },
-  });
+  const [dbShifts, insightsStatus] = await Promise.all([
+    prisma.shift.findMany({
+      where: { userId: session.user.id },
+      orderBy: { date: "asc" },
+    }),
+    getInsightsStatus(),
+  ]);
+
+  const { remaining: initialRemaining, latest: initialLatest } =
+    "success" in insightsStatus
+      ? insightsStatus.data
+      : { remaining: 0, latest: null };
 
   const shifts = dbShifts.map((s) => ({
     date: s.date.toISOString(),
@@ -198,6 +208,11 @@ export default async function TrendsPage({
           </div>
         </div>
       </div>
+
+      <TrendInsights
+        initialRemaining={initialRemaining}
+        initialLatest={initialLatest}
+      />
 
       <section className="mb-4 rounded-lg border border-border bg-surface shadow-md p-5">
         <div className="flex items-baseline justify-between mb-1">
