@@ -63,7 +63,8 @@ describe("startShiftSession", () => {
     mockSubscription(true);
     mockNoOpenSession();
 
-    const now = new Date();
+    const now = new Date("2025-07-08T09:00:00Z");
+    vi.setSystemTime(now);
     const prismaResult = {
       id: "session-1",
       userId: "user-1",
@@ -94,8 +95,10 @@ describe("startShiftSession", () => {
       },
     });
     expect(mockPrisma.shiftSession.create).toHaveBeenCalledWith({
-      data: { userId: "user-1", startOdometer: 45128 },
+      data: { userId: "user-1", startOdometer: 45128, startedAt: now },
     });
+
+    vi.useRealTimers();
   });
 
   it("rounds odometer to 2 decimal places", async () => {
@@ -103,7 +106,8 @@ describe("startShiftSession", () => {
     mockSubscription(true);
     mockNoOpenSession();
 
-    const now = new Date();
+    const now = new Date("2025-07-08T09:00:00Z");
+    vi.setSystemTime(now);
     vi.mocked(mockPrisma.shiftSession.create).mockResolvedValue({
       id: "s",
       userId: "u",
@@ -119,8 +123,10 @@ describe("startShiftSession", () => {
     await startShiftSession(45128.456);
 
     expect(mockPrisma.shiftSession.create).toHaveBeenCalledWith({
-      data: { userId: "user-1", startOdometer: 45128.46 },
+      data: { userId: "user-1", startOdometer: 45128.46, startedAt: now },
     });
+
+    vi.useRealTimers();
   });
 
   it("accepts zero as a valid odometer reading", async () => {

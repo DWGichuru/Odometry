@@ -57,6 +57,7 @@ export async function startShiftSession(
   }
 
   const rounded = Math.round(startOdometer * 100) / 100;
+  const now = new Date();
 
   let session;
   try {
@@ -64,6 +65,7 @@ export async function startShiftSession(
       data: {
         userId,
         startOdometer: rounded,
+        startedAt: now,
       },
     });
   } catch (err) {
@@ -77,7 +79,7 @@ export async function startShiftSession(
       id: session.id,
       userId: session.userId,
       startOdometer: session.startOdometer,
-      startedAt: session.startedAt.toISOString(),
+      startedAt: now.toISOString(),
       endOdometer: session.endOdometer,
       endedAt: session.endedAt?.toISOString() ?? null,
       status: session.status as unknown as SessionStatus,
