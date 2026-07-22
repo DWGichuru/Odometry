@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { getBaseUrl } from "@/lib/base-url";
 
 let _stripe: Stripe | null = null;
 
@@ -35,11 +36,12 @@ export async function createCheckoutSession(
     throw new Error("Customer already has an active subscription.")
   }
 
+  const baseUrl = getBaseUrl();
   return stripe.checkout.sessions.create({
     mode: "subscription",
     line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${process.env.NEXT_PUBLIC_URL ?? "http://localhost:3000"}/billing?checkout=success`,
-    cancel_url: `${process.env.NEXT_PUBLIC_URL ?? "http://localhost:3000"}/billing?checkout=canceled`,
+    success_url: `${baseUrl}/billing?checkout=success`,
+    cancel_url: `${baseUrl}/billing?checkout=canceled`,
     customer: params.customerId,
     allow_promotion_codes: true,
   });
@@ -68,6 +70,6 @@ export async function createPortalSession(customerId: string) {
 
   return stripe.billingPortal.sessions.create({
     customer: customerId,
-    return_url: `${process.env.NEXT_PUBLIC_URL ?? "http://localhost:3000"}/billing`,
+    return_url: `${getBaseUrl()}/billing`,
   });
 }

@@ -43,6 +43,7 @@ Required for Vercel production deployment (set in Settings > Environment Variabl
 | `DIRECT_URL` | Direct PostgreSQL connection (for `prisma migrate deploy`) |
 | `AUTH_SECRET` | NextAuth secret (`openssl rand -base64 32`) |
 | `AUTH_URL` | Production URL, e.g. `https://odometry.vercel.app` |
+| `NEXT_PUBLIC_URL` | Production URL including scheme, e.g. `https://odometry.vercel.app` -- used to build absolute links for Stripe checkout/portal redirects and transactional emails. Must include `http://` or `https://`. |
 | `OPENAI_API_KEY` | OpenAI API key (vision model for screenshot/odometer extraction) |
 | `STRIPE_SECRET_KEY` | Stripe secret key |
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |

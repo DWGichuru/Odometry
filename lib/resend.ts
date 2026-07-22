@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { getBaseUrl } from "@/lib/base-url";
 
 let _resend: Resend | null = null;
 
@@ -10,11 +11,7 @@ export function getResend(): Resend {
 }
 
 export async function sendVerificationEmail(email: string, token: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_URL
-  if (!baseUrl) {
-    throw new Error(`Email server not setup correctly`)
-  }
-
+  const baseUrl = getBaseUrl({ required: true });
   const verifyUrl = `${baseUrl}/verify-email?token=${encodeURIComponent(token)}`;
 
   const resend = getResend();
@@ -33,11 +30,7 @@ export async function sendVerificationEmail(email: string, token: string) {
 }
 
 export async function sendPasswordResetEmail(email: string, token: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_URL
-  if (!baseUrl) {
-    throw new Error(`Email server not setup correctly`)
-  }
-
+  const baseUrl = getBaseUrl({ required: true });
   const resetUrl = `${baseUrl}/reset-password?token=${encodeURIComponent(token)}`;
 
   const resend = getResend();
