@@ -3,6 +3,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { isSupportedCurrency } from "@/lib/currency";
+import { alertOnFailure } from "@/lib/alert";
 
 type UpdateResult = { success: true } | { error: string };
 type PreferencesResult =
@@ -43,10 +44,15 @@ export async function updateProfilePreferences(
     return { error: "Unsupported distance unit." };
   }
 
-  await prisma.user.update({
-    where: { id: session.user.id },
-    data: { currency, distanceUnit },
-  });
+  try {
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { currency, distanceUnit },
+    });
+  } catch (err) {
+    await alertOnFailure("Failed to update profile preferences", err);
+    throw err;
+  }
 
   return { success: true };
 }

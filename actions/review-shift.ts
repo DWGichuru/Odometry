@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { hasAccess } from "@/lib/subscription";
 import type { ExtractedShiftFields } from "@/lib/extract-parser";
 import { EntrySource } from "@/types/shift";
+import { alertOnFailure } from "@/lib/alert";
 
 async function checkAccess(): Promise<{ error: string } | { userId: string }> {
   const session = await auth();
@@ -52,23 +53,29 @@ export async function createShiftFromSession(
 
   const distanceKm = Math.round((s.endOdometer - s.startOdometer) * 100) / 100;
 
-  const shift = await prisma.shift.create({
-    data: {
-      userId,
-      date: extractedFields.date
-        ? new Date(`${extractedFields.date}T00:00:00`)
-        : new Date(),
-      platform: extractedFields.platform ?? "UBER",
-      startTime: s.startedAt,
-      endTime: s.endedAt,
-      amountEarned: extractedFields.amountEarned ?? 0,
-      tripsCompleted: extractedFields.tripsCompleted ?? 0,
-      startOdometer: s.startOdometer,
-      endOdometer: s.endOdometer,
-      distanceKm,
-      entrySource: EntrySource.ODOMETER,
-    },
-  });
+  let shift;
+  try {
+    shift = await prisma.shift.create({
+      data: {
+        userId,
+        date: extractedFields.date
+          ? new Date(`${extractedFields.date}T00:00:00`)
+          : new Date(),
+        platform: extractedFields.platform ?? "UBER",
+        startTime: s.startedAt,
+        endTime: s.endedAt,
+        amountEarned: extractedFields.amountEarned ?? 0,
+        tripsCompleted: extractedFields.tripsCompleted ?? 0,
+        startOdometer: s.startOdometer,
+        endOdometer: s.endOdometer,
+        distanceKm,
+        entrySource: EntrySource.ODOMETER,
+      },
+    });
+  } catch (err) {
+    await alertOnFailure("Failed to create shift from session", err);
+    throw err;
+  }
 
   return { success: true, shiftId: shift.id };
 }

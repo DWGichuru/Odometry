@@ -7,6 +7,7 @@ import { buildShift, isValid, validateShiftEntry } from "@/lib/shift-entry";
 import type { ShiftFormData } from "@/lib/shift-entry";
 import { convertOdometerFieldsToKm } from "@/lib/units";
 import { EntrySource } from "@/types/shift";
+import { alertOnFailure } from "@/lib/alert";
 
 async function checkAccess(): Promise<
   { error: string } | { userId: string; distanceUnit: "KM" | "MI" }
@@ -69,22 +70,27 @@ export async function createShift(
 
   const shift = buildShift(data, userId, entrySource);
 
-  await prisma.shift.create({
-    data: {
-      id: shift.id,
-      userId: shift.userId,
-      date: new Date(`${shift.date}T00:00:00`),
-      platform: shift.platform,
-      startTime: new Date(shift.startTime),
-      endTime: new Date(shift.endTime),
-      amountEarned: shift.amountEarned,
-      tripsCompleted: shift.tripsCompleted,
-      startOdometer: shift.startOdometer,
-      endOdometer: shift.endOdometer,
-      distanceKm: shift.distanceKm,
-      entrySource: shift.entrySource,
-    },
-  });
+  try {
+    await prisma.shift.create({
+      data: {
+        id: shift.id,
+        userId: shift.userId,
+        date: new Date(`${shift.date}T00:00:00`),
+        platform: shift.platform,
+        startTime: new Date(shift.startTime),
+        endTime: new Date(shift.endTime),
+        amountEarned: shift.amountEarned,
+        tripsCompleted: shift.tripsCompleted,
+        startOdometer: shift.startOdometer,
+        endOdometer: shift.endOdometer,
+        distanceKm: shift.distanceKm,
+        entrySource: shift.entrySource,
+      },
+    });
+  } catch (err) {
+    await alertOnFailure("Failed to create shift", err);
+    throw err;
+  }
 
   return { success: true };
 }
@@ -132,20 +138,25 @@ export async function updateShift(
 
   const shift = buildShift(data, userId);
 
-  await prisma.shift.update({
-    where: { id: shiftId },
-    data: {
-      date: new Date(`${shift.date}T00:00:00`),
-      platform: shift.platform,
-      startTime: new Date(shift.startTime),
-      endTime: new Date(shift.endTime),
-      amountEarned: shift.amountEarned,
-      tripsCompleted: shift.tripsCompleted,
-      startOdometer: shift.startOdometer,
-      endOdometer: shift.endOdometer,
-      distanceKm: shift.distanceKm,
-    },
-  });
+  try {
+    await prisma.shift.update({
+      where: { id: shiftId },
+      data: {
+        date: new Date(`${shift.date}T00:00:00`),
+        platform: shift.platform,
+        startTime: new Date(shift.startTime),
+        endTime: new Date(shift.endTime),
+        amountEarned: shift.amountEarned,
+        tripsCompleted: shift.tripsCompleted,
+        startOdometer: shift.startOdometer,
+        endOdometer: shift.endOdometer,
+        distanceKm: shift.distanceKm,
+      },
+    });
+  } catch (err) {
+    await alertOnFailure("Failed to update shift", err);
+    throw err;
+  }
 
   return { success: true };
 }
@@ -165,7 +176,12 @@ export async function deleteShift(
     return { error: "Shift not found." };
   }
 
-  await prisma.shift.delete({ where: { id: shiftId } });
+  try {
+    await prisma.shift.delete({ where: { id: shiftId } });
+  } catch (err) {
+    await alertOnFailure("Failed to delete shift", err);
+    throw err;
+  }
 
   return { success: true };
 }

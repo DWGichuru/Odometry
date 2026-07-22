@@ -6,6 +6,7 @@ import { hasAccess } from "@/lib/subscription";
 import { callOpenAIVision } from "@/lib/openai";
 import { parseExtractionResponse } from "@/lib/extract-parser";
 import type { ExtractedShiftFields } from "@/lib/extract-parser";
+import { alertOnFailure } from "@/lib/alert";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -60,6 +61,7 @@ export async function extractShiftFromScreenshot(
   try {
     rawResponse = await callOpenAIVision(imageBase64);
   } catch (e) {
+    await alertOnFailure("Screenshot extraction failed", e);
     const message =
       e instanceof Error ? e.message : "AI extraction failed.";
     return { error: message };

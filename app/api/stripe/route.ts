@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
+import { alertOnFailure } from "@/lib/alert";
 
 type SubStatus = "trialing" | "active" | "past_due" | "canceled";
 
@@ -120,7 +121,7 @@ export async function POST(request: NextRequest) {
       }
     }
   } catch (e) {
-    console.error("Stripe webhook error:", e);
+    await alertOnFailure("Stripe webhook processing failed", e);
     return NextResponse.json(
       { error: "Webhook processing failed" },
       { status: 500 },

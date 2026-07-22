@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { createCheckoutSession, createPortalSession } from "@/lib/stripe";
 import { redirect } from "next/navigation";
+import { alertOnFailure } from "@/lib/alert";
 
 export async function checkoutAction(
   _formData?: FormData,
@@ -23,16 +24,25 @@ export async function checkoutAction(
     redirect("/billing?checkout=already-subscribed")
   }
 
-  const stripeSession = await createCheckoutSession({
-    customerId: sub?.stripeCustomerId ?? undefined,
-    customerEmail: session.user.email ?? undefined,
-  });
-
-  if (!stripeSession.url) {
-    throw new Error("Could not create checkout session.");
+  let checkoutUrl: string | null;
+  try {
+    const stripeSession = await createCheckoutSession({
+      customerId: sub?.stripeCustomerId ?? undefined,
+      customerEmail: session.user.email ?? undefined,
+    });
+    checkoutUrl = stripeSession.url;
+  } catch (err) {
+    await alertOnFailure("Stripe checkout session creation failed", err);
+    throw err;
   }
 
-  redirect(stripeSession.url);
+  if (!checkoutUrl) {
+    const err = new Error("Could not create checkout session.");
+    await alertOnFailure("Stripe checkout session creation failed", err);
+    throw err;
+  }
+
+  redirect(checkoutUrl);
 }
 
 export async function portalAction(
@@ -52,11 +62,20 @@ export async function portalAction(
     throw new Error("No billing account found. Please subscribe first.");
   }
 
-  const portal = await createPortalSession(sub.stripeCustomerId);
-
-  if (!portal.url) {
-    throw new Error("Could not open billing portal.");
+  let portalUrl: string | null;
+  try {
+    const portal = await createPortalSession(sub.stripeCustomerId);
+    portalUrl = portal.url;
+  } catch (err) {
+    await alertOnFailure("Stripe portal session creation failed", err);
+    throw err;
   }
 
-  redirect(portal.url);
+  if (!portalUrl) {
+    const err = new Error("Could not open billing portal.");
+    await alertOnFailure("Stripe portal session creation failed", err);
+    throw err;
+  }
+
+  redirect(portalUrl);
 }

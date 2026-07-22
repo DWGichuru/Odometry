@@ -5,6 +5,7 @@ import { summarizeShifts } from "@/lib/export";
 import { formatMoney } from "@/lib/currency";
 import { formatDistance, KM_PER_MILE } from "@/lib/units";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { alertOnFailure } from "@/lib/alert";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: ctx.error }, { status: 400 });
   }
 
+  try {
+    return await buildPdfResponse(ctx);
+  } catch (err) {
+    await alertOnFailure("PDF export failed", err);
+    return NextResponse.json({ error: "Could not generate PDF." }, { status: 500 });
+  }
+}
+
+async function buildPdfResponse(
+  ctx: Exclude<Awaited<ReturnType<typeof getExportContext>>, { error: string }>,
+) {
   const summary = summarizeShifts(ctx.shifts);
   const currencyCode = ctx.currency;
   const distanceUnit = ctx.distanceUnit;

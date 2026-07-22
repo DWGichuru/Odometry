@@ -45,7 +45,7 @@ export async function sendVerificationEmail(email: string): Promise<SendVerifica
   try {
     await sendEmail(email, token);
   } catch (err) {
-    alertOnFailure("Failed sending user email", err)
+    await alertOnFailure("Failed sending user email", err)
     return "failed"
   }
 

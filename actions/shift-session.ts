@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { hasAccess } from "@/lib/subscription";
 import type { ShiftSession } from "@/types/shift-session";
 import { SessionStatus } from "@/types/shift-session";
+import { alertOnFailure } from "@/lib/alert";
 
 type EndSessionData = {
   startOdometer: number;
@@ -57,12 +58,18 @@ export async function startShiftSession(
 
   const rounded = Math.round(startOdometer * 100) / 100;
 
-  const session = await prisma.shiftSession.create({
-    data: {
-      userId,
-      startOdometer: rounded,
-    },
-  });
+  let session;
+  try {
+    session = await prisma.shiftSession.create({
+      data: {
+        userId,
+        startOdometer: rounded,
+      },
+    });
+  } catch (err) {
+    await alertOnFailure("Failed to start shift session", err);
+    throw err;
+  }
 
   return {
     success: true,
@@ -111,14 +118,19 @@ export async function endShiftSession(
   const distanceKm = Math.round((rounded - session.startOdometer) * 100) / 100;
   const now = new Date();
 
-  await prisma.shiftSession.update({
-    where: { id: session.id },
-    data: {
-      endOdometer: rounded,
-      endedAt: now,
-      status: "COMPLETED",
-    },
-  });
+  try {
+    await prisma.shiftSession.update({
+      where: { id: session.id },
+      data: {
+        endOdometer: rounded,
+        endedAt: now,
+        status: "COMPLETED",
+      },
+    });
+  } catch (err) {
+    await alertOnFailure("Failed to end shift session", err);
+    throw err;
+  }
 
   return {
     success: true,
@@ -147,10 +159,15 @@ export async function cancelShiftSession(): Promise<
     return { error: "No open shift found to cancel." };
   }
 
-  await prisma.shiftSession.update({
-    where: { id: session.id },
-    data: { status: "CANCELLED" },
-  });
+  try {
+    await prisma.shiftSession.update({
+      where: { id: session.id },
+      data: { status: "CANCELLED" },
+    });
+  } catch (err) {
+    await alertOnFailure("Failed to cancel shift session", err);
+    throw err;
+  }
 
   return { success: true };
 }

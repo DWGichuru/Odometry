@@ -9,6 +9,7 @@ import {
   checkOdometerPlausibility,
 } from "@/lib/odometer-parser";
 import { milesToKm } from "@/lib/units";
+import { alertOnFailure } from "@/lib/alert";
 
 async function checkAccess(): Promise<
   { error: string } | { userId: string; distanceUnit: "KM" | "MI" }
@@ -60,6 +61,7 @@ export async function extractOdometerFromPhoto(
   try {
     rawResponse = await callOpenAIOdometerVision(imageBase64);
   } catch (e) {
+    await alertOnFailure("Odometer vision extraction failed", e);
     const message =
       e instanceof Error ? e.message : "Could not read the odometer.";
     return { error: message };
