@@ -41,6 +41,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# ui inspection map (disposable, generated locally)
+/blueprint/reference/ui-map/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

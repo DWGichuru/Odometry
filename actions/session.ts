@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
+import * as service from "@/lib/services/shift-session";
 import type { ShiftSession } from "@/types/shift-session";
 
 export async function getOpenSession(): Promise<
@@ -11,28 +11,7 @@ export async function getOpenSession(): Promise<
   if (!session?.user?.id) {
     return { error: "You must be signed in." };
   }
-
-  const open = await prisma.shiftSession.findFirst({
-    where: { userId: session.user.id, status: "OPEN" },
-  });
-
-  if (!open) {
-    return { session: null };
-  }
-
-  return {
-    session: {
-      id: open.id,
-      userId: open.userId,
-      startOdometer: open.startOdometer,
-      startedAt: open.startedAt.toISOString(),
-      endOdometer: open.endOdometer,
-      endedAt: open.endedAt?.toISOString() ?? null,
-      status: open.status as unknown as ShiftSession["status"],
-      createdAt: open.createdAt.toISOString(),
-      updatedAt: open.updatedAt.toISOString(),
-    },
-  };
+  return { session: await service.getOpenSession(session.user.id) };
 }
 
 export async function getCompletedSession(): Promise<
@@ -42,27 +21,5 @@ export async function getCompletedSession(): Promise<
   if (!session?.user?.id) {
     return { error: "You must be signed in." };
   }
-
-  const completed = await prisma.shiftSession.findFirst({
-    where: { userId: session.user.id, status: "COMPLETED" },
-    orderBy: { endedAt: "desc" },
-  });
-
-  if (!completed) {
-    return { session: null };
-  }
-
-  return {
-    session: {
-      id: completed.id,
-      userId: completed.userId,
-      startOdometer: completed.startOdometer,
-      startedAt: completed.startedAt.toISOString(),
-      endOdometer: completed.endOdometer,
-      endedAt: completed.endedAt?.toISOString() ?? null,
-      status: completed.status as unknown as ShiftSession["status"],
-      createdAt: completed.createdAt.toISOString(),
-      updatedAt: completed.updatedAt.toISOString(),
-    },
-  };
+  return { session: await service.getCompletedSession(session.user.id) };
 }

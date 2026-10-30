@@ -1,15 +1,8 @@
 "use server";
 
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
-import {
-  createCheckoutSession,
-  createCustomer,
-  createPortalSession,
-  customerExists,
-} from "@/lib/stripe";
 import { redirect } from "next/navigation";
-import { alertOnFailure } from "@/lib/alert";
+import { createCheckoutUrl, createPortalUrl } from "@/lib/services/billing";
 
 export async function checkoutAction(
   _formData?: FormData,
@@ -19,49 +12,13 @@ export async function checkoutAction(
     redirect("/sign-in");
   }
 
-  const sub = await prisma.subscription.findUnique({
-    where: { userId: session.user.id },
-    select: { stripeCustomerId: true, stripeSubscriptionId: true, status: true },
-  });
-
-  const hasLiveSubscription = !!sub?.stripeSubscriptionId && sub.status !== "canceled"
-  if (hasLiveSubscription) {
-    redirect("/billing?checkout=already-subscribed")
+  const { id, email, name } = session.user;
+  const result = await createCheckoutUrl({ id, email, name });
+  if ("error" in result) {
+    redirect("/billing?checkout=already-subscribed");
   }
 
-  let checkoutUrl: string | null;
-  try {
-    let customerId = sub?.stripeCustomerId ?? undefined;
-    if (customerId && !(await customerExists(customerId))) {
-      customerId = undefined;
-    }
-
-    if (!customerId) {
-      const customer = await createCustomer({
-        email: session.user.email ?? undefined,
-        name: session.user.name ?? undefined,
-      });
-      customerId = customer.id;
-      await prisma.subscription.update({
-        where: { userId: session.user.id },
-        data: { stripeCustomerId: customerId },
-      });
-    }
-
-    const stripeSession = await createCheckoutSession({ customerId });
-    checkoutUrl = stripeSession.url;
-  } catch (err) {
-    await alertOnFailure("Stripe checkout session creation failed", err);
-    throw err;
-  }
-
-  if (!checkoutUrl) {
-    const err = new Error("Could not create checkout session.");
-    await alertOnFailure("Stripe checkout session creation failed", err);
-    throw err;
-  }
-
-  redirect(checkoutUrl);
+  redirect(result.data.url);
 }
 
 export async function portalAction(
@@ -72,29 +29,10 @@ export async function portalAction(
     redirect("/sign-in");
   }
 
-  const sub = await prisma.subscription.findUnique({
-    where: { userId: session.user.id },
-    select: { stripeCustomerId: true },
-  });
-
-  if (!sub?.stripeCustomerId) {
-    throw new Error("No billing account found. Please subscribe first.");
+  const result = await createPortalUrl(session.user.id);
+  if ("error" in result) {
+    throw new Error(result.error);
   }
 
-  let portalUrl: string | null;
-  try {
-    const portal = await createPortalSession(sub.stripeCustomerId);
-    portalUrl = portal.url;
-  } catch (err) {
-    await alertOnFailure("Stripe portal session creation failed", err);
-    throw err;
-  }
-
-  if (!portalUrl) {
-    const err = new Error("Could not open billing portal.");
-    await alertOnFailure("Stripe portal session creation failed", err);
-    throw err;
-  }
-
-  redirect(portalUrl);
+  redirect(result.data.url);
 }

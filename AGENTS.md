@@ -49,6 +49,8 @@ Required for Vercel production deployment (set in Settings > Environment Variabl
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |
 | `STRIPE_PRICE_ID` | Stripe price ID for the Pro plan |
 | `RESEND_API_KEY` | Resend API key for sending transactional emails |
+| `JWT_SECRET` | Signs `/api/v1` access tokens for the iOS app (`openssl rand -base64 32`, at least 32 chars). The API returns 500 if it is missing. |
+| `JWT_REFRESH_SECRET` | Signs `/api/v1` refresh tokens; must differ from `JWT_SECRET` |
 
 Third-party dashboard URLs to update with the production domain:
 

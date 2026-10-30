@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { generateTrendInsights, type InsightData } from "@/actions/insights";
+import { generateTrendInsights } from "@/actions/insights";
+import type { InsightData } from "@/lib/services/insights";
 
 interface TrendInsightsProps {
   initialRemaining: number;
