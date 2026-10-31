@@ -3,8 +3,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const { mockPrisma } = vi.hoisted(() => ({
   mockPrisma: {
     subscription: { findUnique: vi.fn() },
-    shiftSession: { findFirst: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
+    shiftSession: {
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      deleteMany: vi.fn(),
+    },
+    shift: { create: vi.fn() },
     insight: { count: vi.fn() },
+    $transaction: vi.fn(),
   },
 }));
 
@@ -24,9 +32,55 @@ const ACTIVE = { status: "active", freeTrialEndsAt: new Date(0), isLifetimeFree:
 const EXPIRED = { status: "canceled", freeTrialEndsAt: new Date(0), isLifetimeFree: false };
 const NO_FIELDS = { date: null, platform: null, amountEarned: null, tripsCompleted: null };
 
+const COMPLETED_SESSION = {
+  id: "s1",
+  userId: "user-1",
+  status: "COMPLETED",
+  startOdometer: 100,
+  startedAt: new Date("2026-10-30T17:00:00Z"),
+  endOdometer: 150,
+  endedAt: new Date("2026-10-30T21:00:00Z"),
+};
+
 beforeEach(() => {
   vi.clearAllMocks();
   mockPrisma.subscription.findUnique.mockResolvedValue(ACTIVE);
+  mockPrisma.$transaction.mockImplementation((run: (tx: typeof mockPrisma) => unknown) => run(mockPrisma));
+});
+
+describe("createShiftFromSession", () => {
+  beforeEach(() => {
+    mockPrisma.shiftSession.findUnique.mockResolvedValue(COMPLETED_SESSION);
+  });
+
+  it("deletes the session and creates exactly one shift", async () => {
+    mockPrisma.shiftSession.deleteMany.mockResolvedValue({ count: 1 });
+    mockPrisma.shift.create.mockResolvedValue({ id: "shift-1" });
+
+    expect(await createShiftFromSession("user-1", "s1", NO_FIELDS)).toEqual({
+      success: true,
+      shiftId: "shift-1",
+    });
+    expect(mockPrisma.shiftSession.deleteMany).toHaveBeenCalledWith({
+      where: { id: "s1", userId: "user-1", status: "COMPLETED" },
+    });
+    expect(mockPrisma.shift.create).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.shift.create.mock.calls[0][0].data).toMatchObject({
+      startTime: COMPLETED_SESSION.startedAt,
+      endTime: COMPLETED_SESSION.endedAt,
+      distanceKm: 50,
+      entrySource: "ODOMETER",
+    });
+  });
+
+  it("alerts and rethrows when the shift create fails", async () => {
+    const { alertOnFailure } = await import("@/lib/alert");
+    mockPrisma.shiftSession.deleteMany.mockResolvedValue({ count: 1 });
+    mockPrisma.shift.create.mockRejectedValue(new Error("db down"));
+
+    await expect(createShiftFromSession("user-1", "s1", NO_FIELDS)).rejects.toThrow("db down");
+    expect(alertOnFailure).toHaveBeenCalledWith("Failed to create shift from session", expect.any(Error));
+  });
 });
 
 describe("service error codes", () => {
@@ -72,6 +126,13 @@ describe("service error codes", () => {
   it("CONFLICT when saving a session that is still open", async () => {
     mockPrisma.shiftSession.findUnique.mockResolvedValue({ id: "s1", userId: "user-1", status: "OPEN" });
     expect(await createShiftFromSession("user-1", "s1", NO_FIELDS)).toMatchObject({ code: "CONFLICT" });
+  });
+
+  it("CONFLICT when the session was already saved, without creating a second shift", async () => {
+    mockPrisma.shiftSession.findUnique.mockResolvedValue(COMPLETED_SESSION);
+    mockPrisma.shiftSession.deleteMany.mockResolvedValue({ count: 0 });
+    expect(await createShiftFromSession("user-1", "s1", NO_FIELDS)).toMatchObject({ code: "CONFLICT" });
+    expect(mockPrisma.shift.create).not.toHaveBeenCalled();
   });
 
   it("RATE_LIMITED once the monthly insight cap is used", async () => {

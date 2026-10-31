@@ -52,7 +52,9 @@ user row does not expose credentials or grant paid access.
 - **Shift sessions** - one open shift per driver, holding the start time and start
   odometer between the two odometer photos. A shift can span hours during which the
   app is closed, so the open shift lives in the database, not client state. Ending
-  the shift turns the session into a `Shift` row and keeps it as COMPLETED until the driver reviews and saves.
+  the shift marks the session COMPLETED and keeps it until the driver reviews and
+  saves. Saving writes the `Shift` row and deletes the session in one transaction,
+  so a session can only be saved once; the `Shift` keeps every reading and timestamp.
 
 > Timestamps for odometer photo tracking are recorded server-side at the moment the
 > photo is processed, not from the client clock or the image's EXIF data (browsers

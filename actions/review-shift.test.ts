@@ -3,8 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const { mockPrisma } = vi.hoisted(() => ({
   mockPrisma: {
     subscription: { findUnique: vi.fn() },
-    shiftSession: { findUnique: vi.fn() },
+    shiftSession: { findUnique: vi.fn(), deleteMany: vi.fn() },
     shift: { create: vi.fn() },
+    $transaction: vi.fn(),
   },
 }));
 
@@ -50,6 +51,8 @@ describe("createShiftFromSession", () => {
       freeTrialEndsAt: new Date(Date.now() + 86400000),
       isLifetimeFree: false,
     });
+    mockPrisma.$transaction.mockImplementation((run: (tx: typeof mockPrisma) => unknown) => run(mockPrisma));
+    mockPrisma.shiftSession.deleteMany.mockResolvedValue({ count: 1 });
   });
 
   it("creates a shift from completed session data", async () => {

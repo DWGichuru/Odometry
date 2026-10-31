@@ -1,3 +1,4 @@
+import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { alertOnFailure } from "@/lib/alert";
 import { requireSubscription } from "@/lib/services/access";
@@ -193,27 +194,38 @@ export async function createShiftFromSession(
 
   const distanceKm = Math.round((s.endOdometer - s.startOdometer) * 100) / 100;
 
+  const data: Prisma.ShiftUncheckedCreateInput = {
+    userId,
+    date: fields.date ? new Date(`${fields.date}T00:00:00`) : new Date(),
+    platform: fields.platform ?? "UBER",
+    startTime: s.startedAt,
+    endTime: s.endedAt,
+    amountEarned: fields.amountEarned ?? 0,
+    tripsCompleted: fields.tripsCompleted ?? 0,
+    startOdometer: s.startOdometer,
+    endOdometer: s.endOdometer,
+    distanceKm,
+    entrySource: EntrySource.ODOMETER,
+  };
+
   let shift;
   try {
-    shift = await prisma.shift.create({
-      data: {
-        userId,
-        date: fields.date ? new Date(`${fields.date}T00:00:00`) : new Date(),
-        platform: fields.platform ?? "UBER",
-        startTime: s.startedAt,
-        endTime: s.endedAt,
-        amountEarned: fields.amountEarned ?? 0,
-        tripsCompleted: fields.tripsCompleted ?? 0,
-        startOdometer: s.startOdometer,
-        endOdometer: s.endOdometer,
-        distanceKm,
-        entrySource: EntrySource.ODOMETER,
-      },
+    // The conditional delete is the real guard: a concurrent second save blocks on
+    // the row lock, then deletes nothing and gets CONFLICT instead of a duplicate.
+    shift = await prisma.$transaction(async (tx) => {
+      const { count } = await tx.shiftSession.deleteMany({
+        where: { id: sessionId, userId, status: "COMPLETED" },
+      });
+      if (count === 0) return null;
+      return tx.shift.create({ data });
     });
   } catch (err) {
     await alertOnFailure("Failed to create shift from session", err);
     throw err;
   }
 
+  if (!shift) {
+    return fail("CONFLICT", "This shift has already been saved.");
+  }
   return { success: true, shiftId: shift.id };
 }
