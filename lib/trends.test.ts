@@ -118,9 +118,12 @@ describe("aggregateTrends", () => {
 });
 
 describe("formatTrendTotal", () => {
-  it("formats dollar amounts", () => {
-    expect(formatTrendTotal("$", 1234)).toBe("$1,234");
-    expect(formatTrendTotal("$", 0)).toBe("$0");
+  it("formats currency amounts to 2 decimals", () => {
+    expect(formatTrendTotal("$", 1234)).toBe("$1,234.00");
+    expect(formatTrendTotal("$", 0)).toBe("$0.00");
+    expect(formatTrendTotal("$", 19.726)).toBe("$19.73");
+    expect(formatTrendTotal("€", 1234.5)).toBe("€1,234.50");
+    expect(formatTrendTotal("£", 7)).toBe("£7.00");
   });
 
   it("formats hours", () => {
