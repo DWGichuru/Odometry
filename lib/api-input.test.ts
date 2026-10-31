@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseSessionShiftFields, requireNumber } from "@/lib/api-input";
+import { parseSessionShiftFields, requireNumber, requireTimeZone } from "@/lib/api-input";
 
 describe("requireNumber", () => {
   it("returns finite numbers", () => {
@@ -45,5 +45,15 @@ describe("parseSessionShiftFields", () => {
     ["fractional trips", { tripsCompleted: 2.5 }, "tripsCompleted must be a whole number"],
   ])("rejects %s", (_label, body, message) => {
     expect(() => parseSessionShiftFields(body)).toThrow(message);
+  });
+});
+
+describe("requireTimeZone", () => {
+  it("returns a valid IANA zone", () => {
+    expect(requireTimeZone({ timeZone: "America/Toronto" })).toBe("America/Toronto");
+  });
+
+  it.each([undefined, null, "", "Mars/Olympus", -300])("rejects %s", (value) => {
+    expect(() => requireTimeZone({ timeZone: value })).toThrow("timeZone must be an IANA time zone");
   });
 });

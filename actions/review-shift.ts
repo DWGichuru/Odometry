@@ -8,10 +8,11 @@ import type { ExtractedShiftFields } from "@/lib/extract-parser";
 export async function createShiftFromSession(
   sessionId: string,
   extractedFields: ExtractedShiftFields,
+  timeZone: string,
 ): Promise<{ success: true; shiftId: string } | { error: string }> {
   const session = await auth();
   if (!session?.user?.id) {
     return { error: "You must be signed in." };
   }
-  return toActionResult(await createFromSession(session.user.id, sessionId, extractedFields));
+  return toActionResult(await createFromSession(session.user.id, sessionId, extractedFields, timeZone));
 }

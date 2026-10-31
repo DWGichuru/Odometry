@@ -1,5 +1,6 @@
 import { badRequest } from "@/lib/api-auth";
 import type { SessionShiftFields } from "@/lib/services/shift-session";
+import { isValidTimeZone } from "@/lib/shift-time";
 import { Platform } from "@/types/shift";
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -8,6 +9,14 @@ export function requireNumber(body: Record<string, unknown>, key: string): numbe
   const value = body[key];
   if (typeof value !== "number" || !Number.isFinite(value)) {
     throw badRequest(`${key} must be a number`);
+  }
+  return value;
+}
+
+export function requireTimeZone(body: Record<string, unknown>): string {
+  const value = body.timeZone;
+  if (typeof value !== "string" || !isValidTimeZone(value)) {
+    throw badRequest("timeZone must be an IANA time zone, e.g. America/Toronto");
   }
   return value;
 }

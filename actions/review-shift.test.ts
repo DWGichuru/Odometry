@@ -42,6 +42,8 @@ const baseExtracted = {
   endOdometer: null,
 };
 
+const TZ = "America/Los_Angeles";
+
 describe("createShiftFromSession", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -72,7 +74,7 @@ describe("createShiftFromSession", () => {
       id: "shift-1",
     } as never);
 
-    const result = await createShiftFromSession("session-1", baseExtracted);
+    const result = await createShiftFromSession("session-1", baseExtracted, TZ);
 
     expect(result).toEqual({ success: true, shiftId: "shift-1" });
     expect(mockPrisma.shift.create).toHaveBeenCalledWith({
@@ -80,8 +82,8 @@ describe("createShiftFromSession", () => {
         userId: "user-1",
         date: new Date("2025-07-11T00:00:00"),
         platform: "UBER",
-        startTime: new Date("2025-07-11T09:41:00Z"),
-        endTime: new Date("2025-07-11T16:07:00Z"),
+        startTime: new Date("2025-07-11T02:41:00Z"),
+        endTime: new Date("2025-07-11T09:07:00Z"),
         amountEarned: 198.4,
         tripsCompleted: 21,
         startOdometer: 48231,
@@ -115,7 +117,7 @@ describe("createShiftFromSession", () => {
       platform: null,
       amountEarned: null,
       tripsCompleted: null,
-    });
+    }, TZ);
 
     expect(mockPrisma.shift.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -131,7 +133,7 @@ describe("createShiftFromSession", () => {
   it("rejects unauthenticated calls", async () => {
     mockAuth(null);
 
-    const result = await createShiftFromSession("session-1", baseExtracted);
+    const result = await createShiftFromSession("session-1", baseExtracted, TZ);
 
     expect(result).toEqual({ error: "You must be signed in." });
     expect(mockPrisma.shift.create).not.toHaveBeenCalled();
@@ -141,7 +143,7 @@ describe("createShiftFromSession", () => {
     mockAuth("user-1");
     vi.mocked(hasAccess).mockReturnValue(false);
 
-    const result = await createShiftFromSession("session-1", baseExtracted);
+    const result = await createShiftFromSession("session-1", baseExtracted, TZ);
 
     expect(result).toEqual({
       error: "Your free trial has ended. Subscribe to continue.",
@@ -162,7 +164,7 @@ describe("createShiftFromSession", () => {
       status: "COMPLETED",
     });
 
-    const result = await createShiftFromSession("session-1", baseExtracted);
+    const result = await createShiftFromSession("session-1", baseExtracted, TZ);
 
     expect(result).toEqual({ error: "Session not found." });
     expect(mockPrisma.shift.create).not.toHaveBeenCalled();
@@ -181,7 +183,7 @@ describe("createShiftFromSession", () => {
       status: "OPEN",
     });
 
-    const result = await createShiftFromSession("session-1", baseExtracted);
+    const result = await createShiftFromSession("session-1", baseExtracted, TZ);
 
     expect(result).toEqual({ error: "Session is not completed." });
     expect(mockPrisma.shift.create).not.toHaveBeenCalled();

@@ -31,6 +31,7 @@ import { readImageFile } from "@/lib/services/extraction";
 const ACTIVE = { status: "active", freeTrialEndsAt: new Date(0), isLifetimeFree: false };
 const EXPIRED = { status: "canceled", freeTrialEndsAt: new Date(0), isLifetimeFree: false };
 const NO_FIELDS = { date: null, platform: null, amountEarned: null, tripsCompleted: null };
+const TZ = "America/Los_Angeles";
 
 const COMPLETED_SESSION = {
   id: "s1",
@@ -57,7 +58,7 @@ describe("createShiftFromSession", () => {
     mockPrisma.shiftSession.deleteMany.mockResolvedValue({ count: 1 });
     mockPrisma.shift.create.mockResolvedValue({ id: "shift-1" });
 
-    expect(await createShiftFromSession("user-1", "s1", NO_FIELDS)).toEqual({
+    expect(await createShiftFromSession("user-1", "s1", NO_FIELDS, TZ)).toEqual({
       success: true,
       shiftId: "shift-1",
     });
@@ -66,11 +67,35 @@ describe("createShiftFromSession", () => {
     });
     expect(mockPrisma.shift.create).toHaveBeenCalledTimes(1);
     expect(mockPrisma.shift.create.mock.calls[0][0].data).toMatchObject({
-      startTime: COMPLETED_SESSION.startedAt,
-      endTime: COMPLETED_SESSION.endedAt,
+      startTime: new Date("2026-10-30T10:00:00Z"),
+      endTime: new Date("2026-10-30T14:00:00Z"),
       distanceKm: 50,
       entrySource: "ODOMETER",
     });
+  });
+
+  it("defaults the date to the local start day, not the UTC day", async () => {
+    mockPrisma.shiftSession.findUnique.mockResolvedValue({
+      ...COMPLETED_SESSION,
+      startedAt: new Date("2026-10-31T01:00:00Z"), // 6:00 PM PDT on Oct 30
+      endedAt: new Date("2026-10-31T05:00:00Z"),
+    });
+    mockPrisma.shiftSession.deleteMany.mockResolvedValue({ count: 1 });
+    mockPrisma.shift.create.mockResolvedValue({ id: "shift-1" });
+
+    await createShiftFromSession("user-1", "s1", NO_FIELDS, TZ);
+    const { data } = mockPrisma.shift.create.mock.calls[0][0];
+    expect(data.date).toEqual(new Date("2026-10-30T00:00:00"));
+    expect(data.startTime).toEqual(new Date("2026-10-30T18:00:00Z"));
+    expect(data.endTime).toEqual(new Date("2026-10-30T22:00:00Z"));
+  });
+
+  it("VALIDATION_ERROR for an invalid time zone, without saving", async () => {
+    expect(await createShiftFromSession("user-1", "s1", NO_FIELDS, "Mars/Olympus")).toMatchObject({
+      code: "VALIDATION_ERROR",
+    });
+    expect(mockPrisma.shiftSession.deleteMany).not.toHaveBeenCalled();
+    expect(mockPrisma.shift.create).not.toHaveBeenCalled();
   });
 
   it("alerts and rethrows when the shift create fails", async () => {
@@ -78,7 +103,7 @@ describe("createShiftFromSession", () => {
     mockPrisma.shiftSession.deleteMany.mockResolvedValue({ count: 1 });
     mockPrisma.shift.create.mockRejectedValue(new Error("db down"));
 
-    await expect(createShiftFromSession("user-1", "s1", NO_FIELDS)).rejects.toThrow("db down");
+    await expect(createShiftFromSession("user-1", "s1", NO_FIELDS, TZ)).rejects.toThrow("db down");
     expect(alertOnFailure).toHaveBeenCalledWith("Failed to create shift from session", expect.any(Error));
   });
 });
@@ -117,7 +142,7 @@ describe("service error codes", () => {
 
   it("NOT_FOUND for another driver's session, without revealing it exists", async () => {
     mockPrisma.shiftSession.findUnique.mockResolvedValue({ id: "s1", userId: "someone-else" });
-    expect(await createShiftFromSession("user-1", "s1", NO_FIELDS)).toEqual({
+    expect(await createShiftFromSession("user-1", "s1", NO_FIELDS, TZ)).toEqual({
       code: "NOT_FOUND",
       error: "Session not found.",
     });
@@ -125,13 +150,13 @@ describe("service error codes", () => {
 
   it("CONFLICT when saving a session that is still open", async () => {
     mockPrisma.shiftSession.findUnique.mockResolvedValue({ id: "s1", userId: "user-1", status: "OPEN" });
-    expect(await createShiftFromSession("user-1", "s1", NO_FIELDS)).toMatchObject({ code: "CONFLICT" });
+    expect(await createShiftFromSession("user-1", "s1", NO_FIELDS, TZ)).toMatchObject({ code: "CONFLICT" });
   });
 
   it("CONFLICT when the session was already saved, without creating a second shift", async () => {
     mockPrisma.shiftSession.findUnique.mockResolvedValue(COMPLETED_SESSION);
     mockPrisma.shiftSession.deleteMany.mockResolvedValue({ count: 0 });
-    expect(await createShiftFromSession("user-1", "s1", NO_FIELDS)).toMatchObject({ code: "CONFLICT" });
+    expect(await createShiftFromSession("user-1", "s1", NO_FIELDS, TZ)).toMatchObject({ code: "CONFLICT" });
     expect(mockPrisma.shift.create).not.toHaveBeenCalled();
   });
 

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { alertOnFailure } from "@/lib/alert";
 import { requireSubscription } from "@/lib/services/access";
 import { fail, type ServiceFailure } from "@/lib/services/result";
+import { isValidTimeZone, toFloatingTime } from "@/lib/shift-time";
 import type { ExtractedShiftFields } from "@/lib/extract-parser";
 import { EntrySource } from "@/types/shift";
 import type { ShiftSession } from "@/types/shift-session";
@@ -176,9 +177,14 @@ export async function createShiftFromSession(
   userId: string,
   sessionId: string,
   fields: SessionShiftFields,
+  timeZone: string,
 ): Promise<{ success: true; shiftId: string } | ServiceFailure> {
   const denied = await requireSubscription(userId);
   if (denied) return denied;
+
+  if (!isValidTimeZone(timeZone)) {
+    return fail("VALIDATION_ERROR", "A valid IANA time zone is required.");
+  }
 
   const s = await prisma.shiftSession.findUnique({ where: { id: sessionId } });
 
@@ -193,13 +199,19 @@ export async function createShiftFromSession(
   }
 
   const distanceKm = Math.round((s.endOdometer - s.startOdometer) * 100) / 100;
+  // Every shift reader formats times in UTC, so session instants are stored as the
+  // driver's wall-clock time like manual shifts.
+  const startTime = toFloatingTime(s.startedAt, timeZone);
+  const endTime = toFloatingTime(s.endedAt, timeZone);
 
   const data: Prisma.ShiftUncheckedCreateInput = {
     userId,
-    date: fields.date ? new Date(`${fields.date}T00:00:00`) : new Date(),
+    date: fields.date
+      ? new Date(`${fields.date}T00:00:00`)
+      : new Date(`${startTime.toISOString().slice(0, 10)}T00:00:00`),
     platform: fields.platform ?? "UBER",
-    startTime: s.startedAt,
-    endTime: s.endedAt,
+    startTime,
+    endTime,
     amountEarned: fields.amountEarned ?? 0,
     tripsCompleted: fields.tripsCompleted ?? 0,
     startOdometer: s.startOdometer,

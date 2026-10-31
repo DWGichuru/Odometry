@@ -63,7 +63,11 @@ export default function ReviewShiftPage() {
     setSaveError(null);
 
     try {
-      const result = await createShiftFromSession(session.id, extractedFields);
+      const result = await createShiftFromSession(
+        session.id,
+        extractedFields,
+        Intl.DateTimeFormat().resolvedOptions().timeZone,
+      );
       if ("error" in result) {
         setSaveError(result.error);
         setSaving(false);
