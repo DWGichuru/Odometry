@@ -2,6 +2,7 @@ import { auth, signOut } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import PreferencesForm from "@/components/profile/PreferencesForm";
+import DeleteAccount from "@/components/profile/DeleteAccount";
 import Link from "next/link";
 
 function initials(name: string | null): string {
@@ -41,6 +42,7 @@ export default async function ProfilePage() {
       currency: true,
       distanceUnit: true,
       createdAt: true,
+      credential: { select: { id: true } },
       subscription: {
         select: {
           status: true,
@@ -136,6 +138,8 @@ export default async function ProfilePage() {
           Sign out
         </button>
       </form>
+
+      <DeleteAccount hasPassword={user.credential !== null} />
     </div>
   );
 }

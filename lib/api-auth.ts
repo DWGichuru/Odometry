@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAccessToken } from "@/lib/jwt";
+import { prisma } from "@/lib/prisma";
 import { isFailure, type ServiceErrorCode, type ServiceFailure } from "@/lib/services/result";
 
 export class ApiError extends Error {
@@ -38,10 +39,14 @@ export async function requireAuth(req: NextRequest): Promise<string> {
   const header = req.headers.get("authorization");
   const token = header?.startsWith("Bearer ") ? header.slice(7).trim() : "";
   const userId = token ? await verifyAccessToken(token) : null;
-  if (!userId) {
+  // Access tokens outlive account deletion, so confirm the user still exists.
+  const user = userId
+    ? await prisma.user.findUnique({ where: { id: userId }, select: { id: true } })
+    : null;
+  if (!user) {
     throw new ApiError("Missing or invalid access token", 401, "UNAUTHORIZED");
   }
-  return userId;
+  return user.id;
 }
 
 export async function readJsonObject(req: NextRequest): Promise<Record<string, unknown>> {

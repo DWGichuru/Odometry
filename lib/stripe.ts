@@ -65,6 +65,19 @@ export async function createCustomer(params: { email?: string; name?: string }) 
   return stripe.customers.create({ email: params.email, name: params.name });
 }
 
+/** Deleting a customer also cancels all of its subscriptions immediately. */
+export async function deleteCustomer(customerId: string): Promise<void> {
+  const stripe = getStripe();
+  try {
+    await stripe.customers.del(customerId);
+  } catch (err) {
+    if (err instanceof Stripe.errors.StripeError && err.code === "resource_missing") {
+      return;
+    }
+    throw err;
+  }
+}
+
 export async function createPortalSession(customerId: string) {
   const stripe = getStripe();
 

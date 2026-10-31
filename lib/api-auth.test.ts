@@ -1,5 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+
+const { mockPrisma } = vi.hoisted(() => ({
+  mockPrisma: { user: { findUnique: vi.fn() } },
+}));
+
+vi.mock("@/lib/prisma", () => ({ prisma: mockPrisma }));
+
 import {
   ApiError,
   handleApiRequest,
@@ -22,6 +29,7 @@ describe("requireAuth", () => {
   beforeEach(() => {
     vi.stubEnv("JWT_SECRET", "a".repeat(32));
     vi.stubEnv("JWT_REFRESH_SECRET", "r".repeat(32));
+    mockPrisma.user.findUnique.mockImplementation(({ where }) => Promise.resolve({ id: where.id }));
   });
   afterEach(() => vi.unstubAllEnvs());
 
@@ -29,6 +37,16 @@ describe("requireAuth", () => {
     const { accessToken } = await generateTokens("user-1");
     const req = request({ headers: { authorization: `Bearer ${accessToken}` } });
     await expect(requireAuth(req)).resolves.toBe("user-1");
+  });
+
+  it("throws 401 for a valid token whose user was deleted", async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(null);
+    const { accessToken } = await generateTokens("user-1");
+    const req = request({ headers: { authorization: `Bearer ${accessToken}` } });
+    await expect(requireAuth(req)).rejects.toMatchObject({
+      statusCode: 401,
+      code: "UNAUTHORIZED",
+    });
   });
 
   it.each([
