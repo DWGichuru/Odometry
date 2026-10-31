@@ -3,22 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { requireAuth, handleApiRequest, ApiError, badRequest, readJsonObject } from '@/lib/api-auth';
 import { hasAccess } from '@/lib/subscription';
 import { buildShift, isValid, validateShiftEntry } from '@/lib/shift-entry';
-import type { ShiftFormData } from '@/lib/shift-entry';
-import { convertOdometerFieldsToKm } from '@/lib/units';
+import { mergeShiftUpdate, type ShiftUpdateBody } from '@/lib/shift-update';
 import { alertOnFailure } from '@/lib/alert';
-
-interface ShiftData {
-  date?: string;
-  platform?: string;
-  startTime?: string;
-  endTime?: string;
-  amountEarned?: string | number;
-  tripsCompleted?: string | number;
-  odoMode?: 'odometer' | 'distance';
-  startOdometer?: string | number;
-  distance?: string | number;
-  endOdometer?: string | number;
-}
 
 interface Shift {
   id: string;
@@ -64,7 +50,7 @@ async function handleGetShift(id: string, userId: string): Promise<Shift> {
   };
 }
 
-async function handleUpdateShift(id: string, userId: string, body: ShiftData): Promise<Shift> {
+async function handleUpdateShift(id: string, userId: string, body: ShiftUpdateBody): Promise<Shift> {
   // Verify shift exists and belongs to user
   const existing = await prisma.shift.findUnique({
     where: { id },
@@ -89,24 +75,7 @@ async function handleUpdateShift(id: string, userId: string, body: ShiftData): P
 
   const distanceUnit = user?.distanceUnit ?? 'MI';
 
-  // Build form data for validation
-  const formData: ShiftFormData = {
-    date: String(body.date ?? existing.date.toISOString().split('T')[0]),
-    platform: (body.platform ?? existing.platform) as ShiftFormData['platform'],
-    startTime: String(body.startTime ?? existing.startTime.toISOString()),
-    endTime: String(body.endTime ?? existing.endTime.toISOString()),
-    amountEarned: String(body.amountEarned ?? existing.amountEarned),
-    tripsCompleted: String(body.tripsCompleted ?? existing.tripsCompleted),
-    odoMode: (body.odoMode ?? 'odometer') as ShiftFormData['odoMode'],
-    ...convertOdometerFieldsToKm(
-      {
-        startOdometer: String(body.startOdometer ?? existing.startOdometer),
-        distance: String(body.distance ?? ''),
-        endOdometer: String(body.endOdometer ?? existing.endOdometer),
-      },
-      distanceUnit,
-    ),
-  };
+  const { formData, timesSent } = mergeShiftUpdate(body, existing, distanceUnit);
 
   // Validate
   const errors = validateShiftEntry(formData);
@@ -123,8 +92,10 @@ async function handleUpdateShift(id: string, userId: string, body: ShiftData): P
       data: {
         date: new Date(`${shift.date}T00:00:00`),
         platform: shift.platform,
-        startTime: new Date(shift.startTime),
-        endTime: new Date(shift.endTime),
+        // Rebuilding untouched times would rewrite odometer shifts' real instants
+        // as floating time and drop their seconds.
+        startTime: timesSent ? new Date(shift.startTime) : existing.startTime,
+        endTime: timesSent ? new Date(shift.endTime) : existing.endTime,
         amountEarned: shift.amountEarned,
         tripsCompleted: shift.tripsCompleted,
         startOdometer: shift.startOdometer,
@@ -196,7 +167,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const userId = await requireAuth(req);
     const { id } = await params;
     const body = await readJsonObject(req);
-    return handleUpdateShift(id, userId, body as unknown as ShiftData);
+    return handleUpdateShift(id, userId, body as unknown as ShiftUpdateBody);
   });
 }
 
