@@ -44,6 +44,9 @@ yarn-error.log*
 # ui inspection map (disposable, generated locally)
 /blueprint/reference/ui-map/
 
+# iOS conversion working docs (kept local)
+/blueprint/ios-conversion/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

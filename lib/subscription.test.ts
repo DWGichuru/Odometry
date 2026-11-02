@@ -32,7 +32,11 @@ describe("hasAccess", () => {
     ).toBe(true);
   });
 
-  it("returns true for trialing subscriptions", () => {
+  it("returns true for trialing subscriptions inside the trial", () => {
+    expect(hasAccess(sub({ status: "trialing" }))).toBe(true);
+  });
+
+  it("returns false for trialing subscriptions after the trial ends", () => {
     expect(
       hasAccess(
         sub({
@@ -40,7 +44,7 @@ describe("hasAccess", () => {
           freeTrialEndsAt: new Date(Date.now() - 1000),
         }),
       ),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it("returns true when trial has not expired (even if status is not trialing)", () => {

@@ -12,6 +12,14 @@ export function getStripe(): Stripe {
   return _stripe;
 }
 
+/** Stripe already holds a live subscription for the customer, even if our row says otherwise. */
+export class ActiveSubscriptionError extends Error {
+  constructor() {
+    super("Customer already has an active subscription.");
+    this.name = "ActiveSubscriptionError";
+  }
+}
+
 interface CreateCheckoutSessionParams {
   customerId: string;
 }
@@ -33,7 +41,7 @@ export async function createCheckoutSession(
     ["active", "trialing", "past_due", "unpaid"].includes(s.status)
   )
   if (hasLive) {
-    throw new Error("Customer already has an active subscription.")
+    throw new ActiveSubscriptionError()
   }
 
   const baseUrl = getBaseUrl();

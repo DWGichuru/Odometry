@@ -8,6 +8,7 @@ const { mockPrisma } = vi.hoisted(() => ({
       findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
       deleteMany: vi.fn(),
     },
     shift: { create: vi.fn() },
@@ -18,15 +19,21 @@ const { mockPrisma } = vi.hoisted(() => ({
 
 vi.mock("@/lib/prisma", () => ({ prisma: mockPrisma }));
 vi.mock("@/lib/alert", () => ({ alertOnFailure: vi.fn() }));
+vi.mock("@/lib/openai", () => ({
+  callOpenAIVision: vi.fn(),
+  callOpenAIOdometerVision: vi.fn(),
+}));
 
 import {
   cancelShiftSession,
   createShiftFromSession,
+  discardShiftSession,
   endShiftSession,
   startShiftSession,
 } from "@/lib/services/shift-session";
 import { generateTrendInsights } from "@/lib/services/insights";
-import { readImageFile } from "@/lib/services/extraction";
+import { extractShiftFromScreenshot, readImageFile } from "@/lib/services/extraction";
+import { callOpenAIVision } from "@/lib/openai";
 
 const ACTIVE = { status: "active", freeTrialEndsAt: new Date(0), isLifetimeFree: false };
 const EXPIRED = { status: "canceled", freeTrialEndsAt: new Date(0), isLifetimeFree: false };
@@ -120,6 +127,18 @@ describe("service error codes", () => {
     expect(await startShiftSession("user-1", 100)).toMatchObject({ code: "CONFLICT" });
   });
 
+  it("CONFLICT when a completed session is still waiting to be saved or discarded", async () => {
+    mockPrisma.shiftSession.findFirst.mockResolvedValue({ id: "s1", status: "COMPLETED" });
+    expect(await startShiftSession("user-1", 100)).toEqual({
+      code: "CONFLICT",
+      error: "Save or discard your last shift first.",
+    });
+    expect(mockPrisma.shiftSession.findFirst).toHaveBeenCalledWith({
+      where: { userId: "user-1", status: { in: ["OPEN", "COMPLETED"] } },
+    });
+    expect(mockPrisma.shiftSession.create).not.toHaveBeenCalled();
+  });
+
   it("VALIDATION_ERROR for a negative start reading", async () => {
     expect(await startShiftSession("user-1", -1)).toMatchObject({ code: "VALIDATION_ERROR" });
   });
@@ -179,5 +198,64 @@ describe("readImageFile", () => {
     ["a non-image", new File(["x"], "x.pdf", { type: "application/pdf" }), "File must be an image."],
   ])("rejects %s", async (_label, file, error) => {
     expect(await readImageFile(file)).toEqual({ code: "VALIDATION_ERROR", error });
+  });
+});
+
+describe("extractShiftFromScreenshot", () => {
+  const screenshot = () => new File([new Uint8Array([1, 2, 3])], "earnings.png", { type: "image/png" });
+
+  it("UNPROCESSABLE when the model reads nothing from the image", async () => {
+    vi.mocked(callOpenAIVision).mockResolvedValue(
+      JSON.stringify({ date: null, platform: null, startTime: "lunch", tripsCompleted: null }),
+    );
+    expect(await extractShiftFromScreenshot("user-1", screenshot(), "")).toEqual({
+      code: "UNPROCESSABLE",
+      error: "Couldn't read that screenshot. Try a clearer one or enter it manually.",
+    });
+  });
+
+  it("returns the fields when at least one was read", async () => {
+    vi.mocked(callOpenAIVision).mockResolvedValue(JSON.stringify({ amountEarned: 42.5 }));
+    expect(await extractShiftFromScreenshot("user-1", screenshot(), "100")).toMatchObject({
+      success: true,
+      data: { amountEarned: 42.5, date: null, startOdometer: "100" },
+    });
+  });
+});
+
+describe("discardShiftSession", () => {
+  it("cancels a completed session owned by the driver", async () => {
+    mockPrisma.shiftSession.updateMany.mockResolvedValue({ count: 1 });
+    expect(await discardShiftSession("user-1", "s1")).toEqual({ success: true });
+    expect(mockPrisma.shiftSession.updateMany).toHaveBeenCalledWith({
+      where: { id: "s1", userId: "user-1", status: "COMPLETED" },
+      data: { status: "CANCELLED" },
+    });
+  });
+
+  it("CONFLICT when the session is no longer completed (already discarded)", async () => {
+    mockPrisma.shiftSession.updateMany.mockResolvedValue({ count: 0 });
+    mockPrisma.shiftSession.findUnique.mockResolvedValue({ userId: "user-1" });
+    expect(await discardShiftSession("user-1", "s1")).toMatchObject({ code: "CONFLICT" });
+  });
+
+  it("NOT_FOUND for a missing session or another driver's", async () => {
+    mockPrisma.shiftSession.updateMany.mockResolvedValue({ count: 0 });
+    mockPrisma.shiftSession.findUnique.mockResolvedValue(null);
+    expect(await discardShiftSession("user-1", "s1")).toMatchObject({ code: "NOT_FOUND" });
+
+    mockPrisma.shiftSession.findUnique.mockResolvedValue({ userId: "someone-else" });
+    expect(await discardShiftSession("user-1", "s1")).toEqual({
+      code: "NOT_FOUND",
+      error: "Session not found.",
+    });
+  });
+
+  it("SUBSCRIPTION_REQUIRED before touching the session", async () => {
+    mockPrisma.subscription.findUnique.mockResolvedValue(EXPIRED);
+    expect(await discardShiftSession("user-1", "s1")).toMatchObject({
+      code: "SUBSCRIPTION_REQUIRED",
+    });
+    expect(mockPrisma.shiftSession.updateMany).not.toHaveBeenCalled();
   });
 });

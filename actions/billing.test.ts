@@ -20,7 +20,13 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
-vi.mock("@/lib/stripe", () => ({
+vi.mock("@/lib/alert", () => ({
+  alertOnFailure: vi.fn(),
+}));
+
+vi.mock("@/lib/stripe", async (importOriginal) => ({
+  ActiveSubscriptionError: (await importOriginal<typeof import("@/lib/stripe")>())
+    .ActiveSubscriptionError,
   createCheckoutSession: vi.fn(),
   createPortalSession: vi.fn(),
   customerExists: vi.fn(),
@@ -28,8 +34,16 @@ vi.mock("@/lib/stripe", () => ({
 }));
 
 import { auth } from "@/auth";
-import { createCheckoutSession, createCustomer, customerExists } from "@/lib/stripe";
+import { alertOnFailure } from "@/lib/alert";
+import {
+  ActiveSubscriptionError,
+  createCheckoutSession,
+  createCustomer,
+  createPortalSession,
+  customerExists,
+} from "@/lib/stripe";
 import { checkoutAction } from "@/actions/billing";
+import { createCheckoutUrl, createPortalUrl } from "@/lib/services/billing";
 
 function mockAuth(userId: string | null) {
   vi.mocked(auth).mockResolvedValue(
@@ -168,5 +182,62 @@ describe("checkoutAction", () => {
       name: "Driver",
     });
     expect(createCheckoutSession).toHaveBeenCalledWith({ customerId: "cus_new" });
+  });
+});
+
+describe("billing service failures", () => {
+  const user = { id: "user-1", email: "driver@example.com", name: "Driver" };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(mockPrisma.subscription.findUnique).mockResolvedValue({
+      stripeCustomerId: "cus_1",
+      stripeSubscriptionId: null,
+      status: "trialing",
+    });
+    vi.mocked(customerExists).mockResolvedValue(true);
+  });
+
+  it("returns UPSTREAM_ERROR and alerts when Stripe checkout throws", async () => {
+    vi.mocked(createCheckoutSession).mockRejectedValue(new Error("Stripe is down"));
+
+    expect(await createCheckoutUrl(user)).toEqual({
+      code: "UPSTREAM_ERROR",
+      error: "Could not open billing. Try again.",
+    });
+    expect(alertOnFailure).toHaveBeenCalled();
+  });
+
+  it("returns CONFLICT without alerting when Stripe already has a live subscription", async () => {
+    vi.mocked(createCheckoutSession).mockRejectedValue(new ActiveSubscriptionError());
+
+    expect(await createCheckoutUrl(user)).toMatchObject({ code: "CONFLICT" });
+    expect(alertOnFailure).not.toHaveBeenCalled();
+  });
+
+  it("returns UPSTREAM_ERROR when the Stripe portal throws", async () => {
+    vi.mocked(createPortalSession).mockRejectedValue(new Error("Stripe is down"));
+
+    expect(await createPortalUrl("user-1")).toEqual({
+      code: "UPSTREAM_ERROR",
+      error: "Could not open billing. Try again.",
+    });
+    expect(alertOnFailure).toHaveBeenCalled();
+  });
+
+  it("redirects checkoutAction to already-subscribed on the Stripe live-sub error", async () => {
+    mockAuth("user-1");
+    vi.mocked(createCheckoutSession).mockRejectedValue(new ActiveSubscriptionError());
+
+    await expect(checkoutAction()).rejects.toThrow(
+      "REDIRECT:/billing?checkout=already-subscribed",
+    );
+  });
+
+  it("does not redirect checkoutAction to already-subscribed on an upstream error", async () => {
+    mockAuth("user-1");
+    vi.mocked(createCheckoutSession).mockRejectedValue(new Error("Stripe is down"));
+
+    await expect(checkoutAction()).rejects.toThrow("Could not open billing. Try again.");
   });
 });

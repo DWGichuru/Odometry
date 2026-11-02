@@ -24,6 +24,14 @@ export async function endShiftSession(
   return toActionResult(await service.endShiftSession(session.user.id, endOdometer));
 }
 
+export async function discardShiftSession(
+  sessionId: string,
+): Promise<{ success: true } | { error: string }> {
+  const session = await auth();
+  if (!session?.user?.id) return SIGNED_OUT;
+  return toActionResult(await service.discardShiftSession(session.user.id, sessionId));
+}
+
 export async function cancelShiftSession(): Promise<{ success: true } | { error: string }> {
   const session = await auth();
   if (!session?.user?.id) return SIGNED_OUT;

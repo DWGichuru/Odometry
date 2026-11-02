@@ -7,6 +7,7 @@ import { getCompletedSession } from "@/actions/session";
 import { extractShiftFromScreenshot } from "@/actions/import";
 import { createShiftFromSession } from "@/actions/review-shift";
 import { getProfilePreferences } from "@/actions/profile";
+import DiscardShiftButton from "@/components/review-shift/DiscardShiftButton";
 import type { ShiftSession } from "@/types/shift-session";
 import type { ExtractedShiftFields } from "@/lib/extract-parser";
 import { PLATFORM_LABELS } from "@/lib/platform";
@@ -244,6 +245,12 @@ export default function ReviewShiftPage() {
         </div>
       )}
 
+      {step === "screenshot" && (
+        <div className="mt-[16px]">
+          <DiscardShiftButton sessionId={session.id} />
+        </div>
+      )}
+
       {step === "loading" && (
         <div className="flex flex-col items-center gap-[18px] rounded-[var(--radius-lg)] border border-border bg-surface px-[20px] py-[56px] shadow-md">
           <div className="h-[40px] w-[40px] animate-spin rounded-full border-[3px] border-border border-t-accent" />
@@ -390,6 +397,10 @@ export default function ReviewShiftPage() {
             >
               Something wrong? Edit fields
             </Link>
+          </div>
+
+          <div className="mb-[14px]">
+            <DiscardShiftButton sessionId={session.id} />
           </div>
 
           {saveError && (

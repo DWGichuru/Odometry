@@ -53,6 +53,24 @@ describe("validateShiftEntry", () => {
     );
   });
 
+  it.each([
+    ["a non-ISO date", { date: "10/30/2026" }, "date"],
+    ["an impossible date", { date: "2026-02-30" }, "date"],
+    ["an unknown platform", { platform: "TAXI" as Platform }, "platform"],
+    ["an empty platform", { platform: "" as Platform }, "platform"],
+    ["a 12-hour start time", { startTime: "5pm" }, "startTime"],
+    ["an out-of-range end time", { endTime: "24:00" }, "endTime"],
+    ["a time with seconds", { startTime: "18:00:00" }, "startTime"],
+  ])("rejects %s", (_label, overrides, field) => {
+    expect(validateShiftEntry(validEntry(overrides))).toHaveProperty(field);
+  });
+
+  it("accepts midnight and 23:59", () => {
+    expect(
+      validateShiftEntry(validEntry({ startTime: "00:00", endTime: "23:59" })),
+    ).toEqual({});
+  });
+
   it("requires amountEarned", () => {
     expect(
       validateShiftEntry(validEntry({ amountEarned: "" })),

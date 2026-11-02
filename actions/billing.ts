@@ -15,7 +15,10 @@ export async function checkoutAction(
   const { id, email, name } = session.user;
   const result = await createCheckoutUrl({ id, email, name });
   if ("error" in result) {
-    redirect("/billing?checkout=already-subscribed");
+    if (result.code === "CONFLICT") {
+      redirect("/billing?checkout=already-subscribed");
+    }
+    throw new Error(result.error);
   }
 
   redirect(result.data.url);

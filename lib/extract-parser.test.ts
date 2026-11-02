@@ -101,6 +101,40 @@ describe("parseExtractionResponse", () => {
     expect(result.tripsCompleted).toBeNull();
   });
 
+  it.each([
+    ["a US-style date", "10/30/2026"],
+    ["an impossible date", "2026-02-30"],
+    ["a month name", "Oct 30"],
+  ])("returns null for %s", (_label, date) => {
+    expect(parseExtractionResponse(JSON.stringify({ date })).date).toBeNull();
+  });
+
+  it.each([
+    ["17:00", "17:00"],
+    ["5:00 PM", "17:00"],
+    ["5pm", "17:00"],
+    ["12:15 AM", "00:15"],
+    ["12:30 p.m.", "12:30"],
+    ["9:05", "09:05"],
+    ["18:00:00", "18:00"],
+    ["lunch", null],
+    ["25:00", null],
+    ["13:00 PM", null],
+  ])("normalizes start time %s to %s", (startTime, expected) => {
+    expect(parseExtractionResponse(JSON.stringify({ startTime })).startTime).toBe(expected);
+  });
+
+  it("normalizes snake_case end times too", () => {
+    expect(parseExtractionResponse(JSON.stringify({ end_time: "10:30 pm" })).endTime).toBe(
+      "22:30",
+    );
+  });
+
+  it("rounds tripsCompleted to a whole number", () => {
+    expect(parseExtractionResponse(JSON.stringify({ tripsCompleted: 7.6 })).tripsCompleted).toBe(8);
+    expect(parseExtractionResponse(JSON.stringify({ trips: 7.4 })).tripsCompleted).toBe(7);
+  });
+
   it("strips markdown code fences around JSON", () => {
     const result = parseExtractionResponse(
       '```json\n{"date":"2025-07-08","platform":"UBER","amountEarned":150}\n```',

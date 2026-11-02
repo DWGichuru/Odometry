@@ -71,8 +71,11 @@ export async function startShiftSession(
   }
 
   const existing = await prisma.shiftSession.findFirst({
-    where: { userId, status: "OPEN" },
+    where: { userId, status: { in: ["OPEN", "COMPLETED"] } },
   });
+  if (existing?.status === "COMPLETED") {
+    return fail("CONFLICT", "Save or discard your last shift first.");
+  }
   if (existing) {
     return fail("CONFLICT", "You already have an open shift. End it before starting a new one.");
   }
@@ -166,6 +169,36 @@ export async function cancelShiftSession(
   }
 
   return { success: true };
+}
+
+/** Drops a completed session without saving it; only a still-COMPLETED session can be discarded. */
+export async function discardShiftSession(
+  userId: string,
+  sessionId: string,
+): Promise<{ success: true } | ServiceFailure> {
+  const denied = await requireSubscription(userId);
+  if (denied) return denied;
+
+  let discarded;
+  try {
+    discarded = await prisma.shiftSession.updateMany({
+      where: { id: sessionId, userId, status: "COMPLETED" },
+      data: { status: "CANCELLED" },
+    });
+  } catch (err) {
+    await alertOnFailure("Failed to discard shift session", err);
+    throw err;
+  }
+  if (discarded.count === 1) return { success: true };
+
+  const s = await prisma.shiftSession.findUnique({
+    where: { id: sessionId },
+    select: { userId: true },
+  });
+  if (!s || s.userId !== userId) {
+    return fail("NOT_FOUND", "Session not found.");
+  }
+  return fail("CONFLICT", "Only a finished shift waiting for review can be discarded.");
 }
 
 export type SessionShiftFields = Pick<

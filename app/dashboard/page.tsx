@@ -84,7 +84,7 @@ export default async function DashboardPage({
     ? Math.max(0, daysBetween(new Date(), trialEnd))
     : 0;
   const showTrialBanner =
-    sub?.status === "trialing" && !sub.isLifetimeFree && trialDaysRemaining <= 7;
+    sub?.status === "trialing" && !sub.isLifetimeFree && trialDaysRemaining > 0 && trialDaysRemaining <= 7;
 
   const params = await searchParams;
 

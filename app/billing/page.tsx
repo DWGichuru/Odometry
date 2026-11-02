@@ -61,7 +61,7 @@ export default async function BillingPage() {
   const now = new Date();
   const trialEnd = sub?.freeTrialEndsAt ? new Date(sub.freeTrialEndsAt) : null;
   const trialDaysRemaining = trialEnd ? Math.max(0, daysBetween(now, trialEnd)) : 0;
-  const isTrialing = sub?.status === "trialing";
+  const isTrialing = sub?.status === "trialing" && trialDaysRemaining > 0;
   const isTrialEnding = isTrialing && trialDaysRemaining <= 7;
   const isActive = sub?.status === "active";
   const isPastDue = sub?.status === "past_due";

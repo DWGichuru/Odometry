@@ -32,7 +32,7 @@ export default async function ShiftsPage() {
     ? Math.max(0, daysBetween(new Date(), trialEnd))
     : 0;
   const showTrialBanner =
-    sub?.status === "trialing" && !sub.isLifetimeFree && trialDaysRemaining <= 7;
+    sub?.status === "trialing" && !sub.isLifetimeFree && trialDaysRemaining > 0 && trialDaysRemaining <= 7;
 
   const dbShifts = await prisma.shift.findMany({
     where: { userId: session.user.id },

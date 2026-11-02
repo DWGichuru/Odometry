@@ -1,5 +1,5 @@
-import { EntrySource, type Shift } from "@/types/shift";
-import type { Platform } from "@/types/shift";
+import { isCalendarDate, isClockTime } from "@/lib/shift-time";
+import { EntrySource, Platform, type Shift } from "@/types/shift";
 
 export interface ShiftFormData {
   date: string;
@@ -24,8 +24,16 @@ export function validateShiftEntry(data: ShiftFormData): ShiftEntryErrors {
   const errors: ShiftEntryErrors = {};
 
   if (!data.date) errors.date = "Required";
+  else if (!isCalendarDate(data.date)) errors.date = "Must be a real date (YYYY-MM-DD)";
+
+  if (!(Object.values(Platform) as string[]).includes(data.platform)) {
+    errors.platform = `Must be one of ${Object.values(Platform).join(", ")}`;
+  }
+
   if (!data.startTime) errors.startTime = "Required";
+  else if (!isClockTime(data.startTime)) errors.startTime = "Must be HH:MM (24-hour)";
   if (!data.endTime) errors.endTime = "Required";
+  else if (!isClockTime(data.endTime)) errors.endTime = "Must be HH:MM (24-hour)";
 
   const amount = Number(data.amountEarned);
   if (empty(data.amountEarned) || Number.isNaN(amount)) {

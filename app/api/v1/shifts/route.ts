@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { Prisma } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, handleApiRequest, ApiError, badRequest, readJsonObject } from '@/lib/api-auth';
 import { hasAccess } from '@/lib/subscription';
@@ -8,7 +9,10 @@ import { convertOdometerFieldsToKm } from '@/lib/units';
 import { EntrySource } from '@/types/shift';
 import { alertOnFailure } from '@/lib/alert';
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 interface ShiftData {
+  id?: unknown;
   date: string;
   platform: string;
   startTime: string;
@@ -75,9 +79,28 @@ async function handleListShifts(req: NextRequest): Promise<{ shifts: Shift[] }> 
   };
 }
 
+function parseClientShiftId(value: unknown): string | null {
+  if (value === undefined || value === null) return null;
+  if (typeof value !== 'string' || !UUID_PATTERN.test(value)) {
+    throw badRequest('id must be a UUID');
+  }
+  return value.toLowerCase();
+}
+
+/** A retried create resolves to the shift the first attempt made; another driver's id conflicts. */
+async function findRetriedShift(id: string, userId: string): Promise<{ shiftId: string } | null> {
+  const existing = await prisma.shift.findUnique({ where: { id }, select: { userId: true } });
+  if (!existing) return null;
+  if (existing.userId !== userId) {
+    throw new ApiError('A shift with this id already exists', 409, 'CONFLICT');
+  }
+  return { shiftId: id };
+}
+
 async function handleCreateShift(req: NextRequest): Promise<{ shiftId: string }> {
   const userId = await requireAuth(req);
   const shiftData = (await readJsonObject(req)) as unknown as ShiftData;
+  const clientId = parseClientShiftId(shiftData.id);
 
   // Check subscription access
   const [subscription, user] = await Promise.all([
@@ -119,13 +142,18 @@ async function handleCreateShift(req: NextRequest): Promise<{ shiftId: string }>
     throw badRequest(Object.values(errors).join(' '));
   }
 
+  if (clientId) {
+    const retried = await findRetriedShift(clientId, userId);
+    if (retried) return retried;
+  }
+
   // Build shift object
   const shift = buildShift(formData, userId, EntrySource.MANUAL);
 
   try {
     const created = await prisma.shift.create({
       data: {
-        id: shift.id,
+        id: clientId ?? shift.id,
         userId: shift.userId,
         date: new Date(`${shift.date}T00:00:00`),
         platform: shift.platform,
@@ -142,6 +170,15 @@ async function handleCreateShift(req: NextRequest): Promise<{ shiftId: string }>
 
     return { shiftId: created.id };
   } catch (err) {
+    // Two racing retries both pass the lookup above; the loser lands here.
+    if (
+      clientId &&
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === 'P2002'
+    ) {
+      const retried = await findRetriedShift(clientId, userId);
+      if (retried) return retried;
+    }
     await alertOnFailure('Failed to create shift', err);
     throw new Error('Failed to create shift');
   }

@@ -60,10 +60,15 @@ export async function extractShiftFromScreenshot(
     return fail("UPSTREAM_ERROR", e instanceof Error ? e.message : "AI extraction failed.");
   }
 
-  return {
-    success: true,
-    data: { ...parseExtractionResponse(rawResponse), startOdometer },
-  };
+  const fields = parseExtractionResponse(rawResponse);
+  if (Object.values(fields).every((value) => value === null)) {
+    return fail(
+      "UNPROCESSABLE",
+      "Couldn't read that screenshot. Try a clearer one or enter it manually.",
+    );
+  }
+
+  return { success: true, data: { ...fields, startOdometer } };
 }
 
 export async function extractOdometerFromPhoto(

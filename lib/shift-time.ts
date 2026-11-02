@@ -1,3 +1,18 @@
+export const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const CLOCK_TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+/** True for a `YYYY-MM-DD` string naming a day that exists (rejects `2026-02-30`). */
+export function isCalendarDate(value: string): boolean {
+  if (!DATE_PATTERN.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
+
+/** True for a 24-hour `HH:MM` string. */
+export function isClockTime(value: string): boolean {
+  return CLOCK_TIME_PATTERN.test(value);
+}
+
 export function isValidTimeZone(timeZone: string): boolean {
   try {
     new Intl.DateTimeFormat("en-US", { timeZone });

@@ -55,6 +55,9 @@ user row does not expose credentials or grant paid access.
   the shift marks the session COMPLETED and keeps it until the driver reviews and
   saves. Saving writes the `Shift` row and deletes the session in one transaction,
   so a session can only be saved once; the `Shift` keeps every reading and timestamp.
+  The driver can instead discard a COMPLETED session, which marks it CANCELLED and
+  creates no shift. A new shift can't start while a COMPLETED session is waiting, so
+  the driver saves or discards it first.
 
 > Timestamps for odometer photo tracking are recorded server-side at the moment the
 > photo is processed, not from the client clock or the image's EXIF data (browsers

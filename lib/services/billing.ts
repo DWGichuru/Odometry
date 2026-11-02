@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import {
+  ActiveSubscriptionError,
   createCheckoutSession,
   createCustomer,
   createPortalSession,
@@ -7,6 +8,8 @@ import {
 } from "@/lib/stripe";
 import { alertOnFailure } from "@/lib/alert";
 import { fail, type ServiceFailure } from "@/lib/services/result";
+
+const BILLING_UNAVAILABLE = "Could not open billing. Try again.";
 
 export interface BillingUser {
   id: string;
@@ -47,14 +50,19 @@ export async function createCheckoutUrl(
 
     checkoutUrl = (await createCheckoutSession({ customerId })).url;
   } catch (err) {
+    if (err instanceof ActiveSubscriptionError) {
+      return fail("CONFLICT", "You already have a subscription.");
+    }
     await alertOnFailure("Stripe checkout session creation failed", err);
-    throw err;
+    return fail("UPSTREAM_ERROR", BILLING_UNAVAILABLE);
   }
 
   if (!checkoutUrl) {
-    const err = new Error("Could not create checkout session.");
-    await alertOnFailure("Stripe checkout session creation failed", err);
-    throw err;
+    await alertOnFailure(
+      "Stripe checkout session creation failed",
+      new Error("Could not create checkout session."),
+    );
+    return fail("UPSTREAM_ERROR", BILLING_UNAVAILABLE);
   }
 
   return { success: true, data: { url: checkoutUrl } };
@@ -77,13 +85,15 @@ export async function createPortalUrl(
     portalUrl = (await createPortalSession(sub.stripeCustomerId)).url;
   } catch (err) {
     await alertOnFailure("Stripe portal session creation failed", err);
-    throw err;
+    return fail("UPSTREAM_ERROR", BILLING_UNAVAILABLE);
   }
 
   if (!portalUrl) {
-    const err = new Error("Could not open billing portal.");
-    await alertOnFailure("Stripe portal session creation failed", err);
-    throw err;
+    await alertOnFailure(
+      "Stripe portal session creation failed",
+      new Error("Could not open billing portal."),
+    );
+    return fail("UPSTREAM_ERROR", BILLING_UNAVAILABLE);
   }
 
   return { success: true, data: { url: portalUrl } };

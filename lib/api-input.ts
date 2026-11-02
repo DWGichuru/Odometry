@@ -1,9 +1,7 @@
 import { badRequest } from "@/lib/api-auth";
 import type { SessionShiftFields } from "@/lib/services/shift-session";
-import { isValidTimeZone } from "@/lib/shift-time";
+import { DATE_PATTERN, isCalendarDate, isValidTimeZone } from "@/lib/shift-time";
 import { Platform } from "@/types/shift";
-
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 export function requireNumber(body: Record<string, unknown>, key: string): number {
   const value = body[key];
@@ -39,8 +37,7 @@ function optionalDate(value: unknown): string | null {
   if (typeof value !== "string" || !DATE_PATTERN.test(value)) {
     throw badRequest("date must be in YYYY-MM-DD format");
   }
-  const parsed = new Date(`${value}T00:00:00Z`);
-  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value) {
+  if (!isCalendarDate(value)) {
     throw badRequest("date is not a real calendar date");
   }
   return value;

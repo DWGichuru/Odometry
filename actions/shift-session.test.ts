@@ -3,7 +3,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const { mockPrisma } = vi.hoisted(() => ({
   mockPrisma: {
     subscription: { findUnique: vi.fn() },
-    shiftSession: { findFirst: vi.fn(), create: vi.fn(), update: vi.fn() },
+    shiftSession: {
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+    },
   },
 }));
 
@@ -21,7 +27,12 @@ vi.mock("@/auth", () => ({
 
 import { auth } from "@/auth";
 import { hasAccess } from "@/lib/subscription";
-import { startShiftSession, endShiftSession, cancelShiftSession } from "@/actions/shift-session";
+import {
+  startShiftSession,
+  endShiftSession,
+  cancelShiftSession,
+  discardShiftSession,
+} from "@/actions/shift-session";
 import { SessionStatus } from "@/types/shift-session";
 
 function mockAuth(userId: string | null) {
@@ -394,5 +405,44 @@ describe("cancelShiftSession", () => {
 
     expect(result).toEqual({ error: "You must be signed in." });
     expect(mockPrisma.shiftSession.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("discardShiftSession", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSubscription(true);
+    mockPrisma.subscription.findUnique.mockResolvedValue({
+      status: "active",
+      freeTrialEndsAt: new Date(Date.now() + 86400000),
+      isLifetimeFree: false,
+    });
+  });
+
+  it("returns an error when not authenticated", async () => {
+    mockAuth(null);
+    expect(await discardShiftSession("session-done")).toEqual({ error: "You must be signed in." });
+    expect(mockPrisma.shiftSession.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("discards the signed-in driver's completed session", async () => {
+    mockAuth("user-1");
+    vi.mocked(mockPrisma.shiftSession.updateMany).mockResolvedValue({ count: 1 });
+
+    expect(await discardShiftSession("session-done")).toEqual({ success: true });
+    expect(mockPrisma.shiftSession.updateMany).toHaveBeenCalledWith({
+      where: { id: "session-done", userId: "user-1", status: "COMPLETED" },
+      data: { status: "CANCELLED" },
+    });
+  });
+
+  it("returns the error message when it was already discarded", async () => {
+    mockAuth("user-1");
+    vi.mocked(mockPrisma.shiftSession.updateMany).mockResolvedValue({ count: 0 });
+    vi.mocked(mockPrisma.shiftSession.findUnique).mockResolvedValue({ userId: "user-1" });
+
+    expect(await discardShiftSession("session-done")).toEqual({
+      error: "Only a finished shift waiting for review can be discarded.",
+    });
   });
 });
