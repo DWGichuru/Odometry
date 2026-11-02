@@ -9,6 +9,8 @@ import { requireSubscription } from "@/lib/services/access";
 import { fail, type ServiceFailure } from "@/lib/services/result";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const SCREENSHOT_UNAVAILABLE = "Couldn't read that screenshot right now. Try again or enter it manually.";
+const ODOMETER_UNAVAILABLE = "Couldn't read the odometer right now. Try again or type it in.";
 
 export interface OdometerReading {
   reading: number;
@@ -57,7 +59,7 @@ export async function extractShiftFromScreenshot(
     rawResponse = await callOpenAIVision(image.base64);
   } catch (e) {
     await alertOnFailure("Screenshot extraction failed", e);
-    return fail("UPSTREAM_ERROR", e instanceof Error ? e.message : "AI extraction failed.");
+    return fail("UPSTREAM_ERROR", SCREENSHOT_UNAVAILABLE);
   }
 
   const fields = parseExtractionResponse(rawResponse);
@@ -89,7 +91,7 @@ export async function extractOdometerFromPhoto(
     rawResponse = await callOpenAIOdometerVision(imageBase64);
   } catch (e) {
     await alertOnFailure("Odometer vision extraction failed", e);
-    return fail("UPSTREAM_ERROR", e instanceof Error ? e.message : "Could not read the odometer.");
+    return fail("UPSTREAM_ERROR", ODOMETER_UNAVAILABLE);
   }
 
   const parsed = parseOdometerResponse(rawResponse);

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const { mockPrisma } = vi.hoisted(() => ({
   mockPrisma: {
     subscription: { findUnique: vi.fn() },
+    user: { findUnique: vi.fn() },
     shiftSession: {
       findFirst: vi.fn(),
       findUnique: vi.fn(),
@@ -14,6 +15,7 @@ const { mockPrisma } = vi.hoisted(() => ({
     shift: { create: vi.fn() },
     insight: { count: vi.fn() },
     $transaction: vi.fn(),
+    $executeRaw: vi.fn(),
   },
 }));
 
@@ -32,8 +34,12 @@ import {
   startShiftSession,
 } from "@/lib/services/shift-session";
 import { generateTrendInsights } from "@/lib/services/insights";
-import { extractShiftFromScreenshot, readImageFile } from "@/lib/services/extraction";
-import { callOpenAIVision } from "@/lib/openai";
+import {
+  extractOdometerFromPhoto,
+  extractShiftFromScreenshot,
+  readImageFile,
+} from "@/lib/services/extraction";
+import { callOpenAIOdometerVision, callOpenAIVision } from "@/lib/openai";
 
 const ACTIVE = { status: "active", freeTrialEndsAt: new Date(0), isLifetimeFree: false };
 const EXPIRED = { status: "canceled", freeTrialEndsAt: new Date(0), isLifetimeFree: false };
@@ -139,6 +145,34 @@ describe("service error codes", () => {
     expect(mockPrisma.shiftSession.create).not.toHaveBeenCalled();
   });
 
+  it("takes the per-driver advisory lock before checking for an open session", async () => {
+    mockPrisma.shiftSession.findFirst.mockResolvedValue(null);
+    mockPrisma.shiftSession.create.mockResolvedValue({
+      id: "s1",
+      userId: "user-1",
+      status: "OPEN",
+      startOdometer: 100.13,
+      startedAt: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    expect(await startShiftSession("user-1", 100.126)).toMatchObject({
+      success: true,
+      data: { id: "s1" },
+    });
+    expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
+    const [sql, key] = mockPrisma.$executeRaw.mock.calls[0];
+    expect(sql.join("?")).toContain("pg_advisory_xact_lock");
+    expect(key).toBe("shift-session:user-1");
+    expect(mockPrisma.$executeRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      mockPrisma.shiftSession.findFirst.mock.invocationCallOrder[0],
+    );
+    expect(mockPrisma.shiftSession.create.mock.calls[0][0].data).toMatchObject({
+      userId: "user-1",
+      startOdometer: 100.13,
+    });
+  });
+
   it("VALIDATION_ERROR for a negative start reading", async () => {
     expect(await startShiftSession("user-1", -1)).toMatchObject({ code: "VALIDATION_ERROR" });
   });
@@ -220,6 +254,28 @@ describe("extractShiftFromScreenshot", () => {
       success: true,
       data: { amountEarned: 42.5, date: null, startOdometer: "100" },
     });
+  });
+
+  it("UPSTREAM_ERROR with a fixed message when the vision call throws", async () => {
+    vi.mocked(callOpenAIVision).mockRejectedValue(new Error("OpenAI API error 500: secret body"));
+    const result = await extractShiftFromScreenshot("user-1", screenshot(), "");
+    expect(result).toEqual({
+      code: "UPSTREAM_ERROR",
+      error: "Couldn't read that screenshot right now. Try again or enter it manually.",
+    });
+    expect(JSON.stringify(result)).not.toContain("secret body");
+  });
+});
+
+describe("extractOdometerFromPhoto", () => {
+  it("UPSTREAM_ERROR with a fixed message when the vision call throws", async () => {
+    vi.mocked(callOpenAIOdometerVision).mockRejectedValue(new Error("OpenAI API error 500: secret body"));
+    const result = await extractOdometerFromPhoto("user-1", "aGVsbG8=");
+    expect(result).toEqual({
+      code: "UPSTREAM_ERROR",
+      error: "Couldn't read the odometer right now. Try again or type it in.",
+    });
+    expect(JSON.stringify(result)).not.toContain("secret body");
   });
 });
 

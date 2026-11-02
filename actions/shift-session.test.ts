@@ -10,6 +10,8 @@ const { mockPrisma } = vi.hoisted(() => ({
       update: vi.fn(),
       updateMany: vi.fn(),
     },
+    $transaction: vi.fn(),
+    $executeRaw: vi.fn(),
   },
 }));
 
@@ -62,6 +64,7 @@ function mockExistingOpenSession() {
 describe("startShiftSession", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockPrisma.$transaction.mockImplementation((run: (tx: typeof mockPrisma) => unknown) => run(mockPrisma));
     mockPrisma.subscription.findUnique.mockResolvedValue({
       status: "active",
       freeTrialEndsAt: new Date(Date.now() + 86400000),

@@ -70,30 +70,34 @@ export async function startShiftSession(
     return fail("VALIDATION_ERROR", "Odometer reading must be 0 or more.");
   }
 
-  const existing = await prisma.shiftSession.findFirst({
-    where: { userId, status: { in: ["OPEN", "COMPLETED"] } },
-  });
-  if (existing?.status === "COMPLETED") {
-    return fail("CONFLICT", "Save or discard your last shift first.");
-  }
-  if (existing) {
-    return fail("CONFLICT", "You already have an open shift. End it before starting a new one.");
-  }
-
   const rounded = Math.round(startOdometer * 100) / 100;
-  const now = new Date();
 
-  let session;
   try {
-    session = await prisma.shiftSession.create({
-      data: { userId, startOdometer: rounded, startedAt: now },
+    // Prisma can't express a partial unique index, so a per-driver advisory lock
+    // serializes concurrent starts: the second waits, then sees the first's row.
+    return await prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${"shift-session:" + userId}))`;
+
+      const existing = await tx.shiftSession.findFirst({
+        where: { userId, status: { in: ["OPEN", "COMPLETED"] } },
+      });
+      if (existing?.status === "COMPLETED") {
+        return fail("CONFLICT", "Save or discard your last shift first.");
+      }
+      if (existing) {
+        return fail("CONFLICT", "You already have an open shift. End it before starting a new one.");
+      }
+
+      const now = new Date();
+      const session = await tx.shiftSession.create({
+        data: { userId, startOdometer: rounded, startedAt: now },
+      });
+      return { success: true as const, data: toShiftSession({ ...session, startedAt: now }) };
     });
   } catch (err) {
     await alertOnFailure("Failed to start shift session", err);
     throw err;
   }
-
-  return { success: true, data: toShiftSession({ ...session, startedAt: now }) };
 }
 
 export async function endShiftSession(
